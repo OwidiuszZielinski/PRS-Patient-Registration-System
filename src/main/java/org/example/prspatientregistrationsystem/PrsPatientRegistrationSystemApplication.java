@@ -2,10 +2,7 @@ package org.example.prspatientregistrationsystem;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @SpringBootApplication
 public class PrsPatientRegistrationSystemApplication {
@@ -18,10 +15,12 @@ public class PrsPatientRegistrationSystemApplication {
     @RequestMapping("/api")
     public class RestTest {
 
+        @CrossOrigin(origins = "http://localhost:3000")
         @GetMapping("/{number}")
-        public String getBigNumber(@PathVariable Integer number) {
+        public Integer getBigNumber(@PathVariable Integer number) {
             Integer result = fibo(number);
-            return String.valueOf(result);
+            System.out.println(result);
+            return result;
         }
 
         private Integer fibo(int n) {
