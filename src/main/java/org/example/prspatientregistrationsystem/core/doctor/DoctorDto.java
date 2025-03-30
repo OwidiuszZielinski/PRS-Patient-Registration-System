@@ -1,6 +1,10 @@
 package org.example.prspatientregistrationsystem.core.doctor;
 
 import lombok.Builder;
+import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorAddCommand;
+import org.example.prspatientregistrationsystem.core.employeeworkschedule.EmployeeWorkSchedule;
+
+import java.util.List;
 
 @Builder
 public record DoctorDto(
@@ -8,7 +12,7 @@ public record DoctorDto(
     String firstName,
     String lastName,
     String licenseNumber,
-    String workingHours
+    List<EmployeeWorkSchedule> employeeWorkSchedules
 ) {
 
   public static DoctorDto of(Doctor doctor) {
@@ -17,7 +21,17 @@ public record DoctorDto(
         doctor.getFirstName(),
         doctor.getLastName(),
         doctor.getLicenseNumber(),
-        doctor.getWorkingHours()
+        doctor.getEmployeeWorkSchedules()
+    );
+  }
+
+  public static DoctorDto of(DoctorAddCommand command) {
+    return new DoctorDto(
+        null,
+        command.firstName(),
+        command.lastName(),
+        command.licenseNumber(),
+        command.employeeWorkSchedules()
     );
   }
 }

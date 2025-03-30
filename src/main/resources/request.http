@@ -1,0 +1,9 @@
+POST http://localhost:8080/doctors
+Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "licenseNumber": "LN12345",
+  "workingHours": null
+}

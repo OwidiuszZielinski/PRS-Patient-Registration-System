@@ -1,4 +1,4 @@
-package org.example.prspatientregistrationsystem.employeeworkschedule;
+package org.example.prspatientregistrationsystem.core.employeeworkschedule;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,6 +26,5 @@ public class EmployeeWorkSchedule {
   private LocalTime startTime;
   private LocalTime endTime;
   @ManyToOne
-  @JoinColumn(name = "doctor.id")
   private Doctor doctor;
 }

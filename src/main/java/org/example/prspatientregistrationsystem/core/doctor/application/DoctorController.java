@@ -1,9 +1,11 @@
 package org.example.prspatientregistrationsystem.core.doctor.application;
 
-import lombok.RequiredArgsConstructor;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorDto;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorService;
+import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorAddCommand;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
@@ -20,7 +22,12 @@ public class DoctorController {
 
   @GetMapping
   public List<DoctorDto> getDoctors() {
-    return doctorService.findAllDoctors();
+    return doctorService.findAll();
+  }
+
+  @PostMapping
+  public void addDoctor(@RequestBody DoctorAddCommand command) {
+    doctorService.add(command);
   }
 
 }
