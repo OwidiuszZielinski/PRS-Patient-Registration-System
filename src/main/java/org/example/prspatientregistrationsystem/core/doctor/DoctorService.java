@@ -12,24 +12,31 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DoctorService {
 
-  private final DoctorRepository doctorRepository;
-  private final EmployeeWorkScheduleService employeeWorkScheduleService;
+    private final DoctorRepository doctorRepository;
+    private final EmployeeWorkScheduleService employeeWorkScheduleService;
 
-  public void add(DoctorAddCommand command) {
 
-    var toSave = DoctorDto.of(command);
-    doctorRepository.save(Doctor.of(toSave));
-    saveWorkSchedule(command.employeeWorkSchedules());
-  }
+    public void add(DoctorAddCommand command) {
+        var doctorToSave = Doctor.builder()
+                .firstName(command.firstName())
+                .lastName(command.lastName())
+                .licenseNumber(command.licenseNumber())
+                .employeeWorkSchedules(command.employeeWorkSchedules())
+                .build();
 
-  public List<DoctorDto> findAll() {
-    return doctorRepository.findAll()
-        .stream().map(DoctorDto::of)
-        .toList();
-  }
+        command.employeeWorkSchedules().forEach(schedule -> schedule.setDoctor(doctorToSave));
+        doctorRepository.save(doctorToSave);
+        saveWorkSchedule(command.employeeWorkSchedules());
+    }
 
-  private void saveWorkSchedule(List<EmployeeWorkSchedule> employeeWorkSchedules) {
-    employeeWorkSchedules.forEach(employeeWorkScheduleService::add);
-  }
+    public List<DoctorDto> findAll() {
+        return doctorRepository.findAll()
+                .stream().map(DoctorDto::mapToDoctor)
+                .toList();
+    }
+
+    private void saveWorkSchedule(List<EmployeeWorkSchedule> employeeWorkSchedules) {
+        employeeWorkSchedules.forEach(employeeWorkScheduleService::add);
+    }
 
 }
