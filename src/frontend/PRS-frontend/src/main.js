@@ -8,6 +8,7 @@
 import { registerPlugins } from '@/plugins'
 // Components
 import App from './App.vue'
+import WaitingRoom from "@/pages/WaitingRoom.vue";
 
 // Composables
 import { createApp } from 'vue'

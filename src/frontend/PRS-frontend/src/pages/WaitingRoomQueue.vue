@@ -1,3 +1,4 @@
+<!--zrobic ladna poczekalnei z numerkami -->
 <template>
   <v-app>
     <v-container class="fill-height d-flex flex-column justify-center align-center">
@@ -28,7 +29,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import WaitingRoomService from "@/services/WaitingRoomService.js";
+import WaitingRoomService from "@/services/DoctorService.js";
 
 // Stan dla aktualnego numeru i oczekujących numerów
 const currentNumber = ref(1);
