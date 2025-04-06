@@ -305,11 +305,8 @@ export default {
     async loadDoctors() {
       this.loadingDoctors = true;
       try {
-        const response = await doctorService.getDoctors();
-        this.doctors = response.data.map(doctor => ({
-          ...doctor,
-          fullName: `Dr ${doctor.firstName} ${doctor.lastName}`
-        }));
+        const response = await doctorService.getDoctorsFullNames();
+        this.doctors = response.data;
       } catch (error) {
         console.error('Błąd podczas ładowania lekarzy:', error);
         this.showNotification('Nie udało się załadować listy lekarzy', 'error');
@@ -360,11 +357,17 @@ export default {
         return;
       }
 
-      const doctor = this.doctors.find(d => d.id === this.newAppointment.doctor);
+      // Sprawdzamy, czy `fullName` z appointment rzeczywiście jest w tej liście
+      const doctorName = this.doctors.find(d => d === this.newAppointment.doctor);
+
+      if (!doctorName) {
+        this.showNotification('Nie znaleziono lekarza', 'error');
+        return;
+      }
+
       this.appointments.push({
         id: this.appointments.length + 1,
-        doctorId: this.newAppointment.doctor,
-        doctorName: doctor.fullName,
+        doctorName,
         office: this.newAppointment.office,
         patient: this.newAppointment.patient,
         date: this.newAppointment.date,
@@ -375,6 +378,7 @@ export default {
       this.showNotification('Wizyta została dodana!', 'success');
       this.resetForm();
     },
+
 
     editAppointment(item) {
       // Tymczasowa implementacja - w rzeczywistości powinno otwierać formularz edycji
