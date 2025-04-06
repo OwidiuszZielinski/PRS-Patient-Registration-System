@@ -1,14 +1,14 @@
-INSERT INTO doctor (id, first_name, last_name, license_number, working_hours)
-VALUES
-    (1, 'Jan', 'Kowalski', 'DOC12345', '08:00-16:00'),
-    (2, 'Anna', 'Nowak', 'DOC67890', '10:00-18:00');
+-- Insert 10 doctors
+INSERT INTO public.doctor (first_name, last_name, license_number) VALUES
+('John', 'Smith', 'MD12345678'),
+('Emily', 'Johnson', 'MD23456789'),
+('Michael', 'Williams', 'MD34567890'),
+('Sarah', 'Brown', 'MD45678901'),
+('David', 'Jones', 'MD56789012'),
+('Jennifer', 'Garcia', 'MD67890123'),
+('Robert', 'Miller', 'MD78901234'),
+('Lisa', 'Davis', 'MD89012345'),
+('Thomas', 'Rodriguez', 'MD90123456'),
+('Patricia', 'Martinez', 'MD01234567');
 
-INSERT INTO employee_work_schedule (id, end_time, start_time, doctor_id, day_of_week)
-VALUES
-    (1, '16:00', '08:00', 1, 'MONDAY'),
-    (2, '18:00', '10:00', 2, 'TUESDAY');
 
-INSERT INTO doctor_employee_work_schedules (employee_work_schedules_id, doctor_id)
-VALUES
-    (1, 1),
-    (2, 2);

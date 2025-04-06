@@ -2,7 +2,7 @@
   <v-container class="home-page" fluid>
     <v-row class="justify-center" no-gutters>
       <!-- Welcome Card -->
-      <v-col cols="12" class="d-flex justify-center mb-6 ">
+      <v-col cols="12" class="d-flex justify-center mb-6">
         <div class="welcome-container">
           <div class="welcome-card">
             <h1 class="welcome-title">
@@ -19,41 +19,118 @@
       </v-col>
 
       <!-- Info Card -->
-      <v-col class="d-flex justify-sm-center mt-16">
-        <div class="info-container">
-          <div class="info-card">
-            <h2 class="info-title">About</h2>
-            <div class="info-content">
-              <div class="creators-section">
-                <h3 class="section-title">Development Team</h3>
-                <ul class="creators-list">
-                  <li class="creator-item">💻 Owidiusz Zieliński</li>
-                  <li class="creator-item">💻 Aleksandra Wrzesień</li>
-                  <li class="creator-item">💻 Michał Zaleśny</li>
-                </ul>
-              </div>
+      <v-col cols="12" md="10" lg="8" class="mt-8">
+        <v-card class="info-card pa-6" elevation="8" shaped>
+          <v-card-title class="info-title text-h4 text-center mb-6">
+            About the Project
+          </v-card-title>
 
-              <div class="decoration-line vertical"></div>
+          <v-card-text class="info-content">
+            <v-row>
+              <!-- Left Column -->
+              <v-col cols="12" md="6" class="left-column">
+                <!-- Development Team Section -->
+                <div class="creators-section">
+                  <h3 class="section-title text-h6 mb-4">
+                    <v-icon left>mdi-account-group</v-icon>
+                    Development Team
+                  </h3>
+                  <v-list dense class="creators-list">
+                    <v-list-item v-for="(creator, index) in creators" :key="index">
+                      <v-list-item-icon>
+                        <v-icon color="primary">mdi-laptop</v-icon>
+                      </v-list-item-icon>
+                      <v-list-item-content>
+                        <v-list-item-title class="creator-name">{{ creator }}</v-list-item-title>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </div>
 
-              <div class="actions-section">
-                <a href="#" class="doc-link">
-                  📚 Documentation
-                  <span class="link-underline"></span>
-                </a>
-                <v-btn
-                  to="/docs"
-                  color="#764abc"
-                  class="cta-button"
-                  depressed
-                  x-large
-                  block
-                >
-                  🚀 Get Started
-                </v-btn>
-              </div>
-            </div>
-          </div>
-        </div>
+                <!-- Technologies Section -->
+                <div class="technologies-section mt-8">
+                  <h3 class="section-title text-h6 mb-4">
+                    <v-icon left>mdi-cog</v-icon>
+                    Tech Stack
+                  </h3>
+                  <v-chip-group column>
+                    <v-chip
+                      v-for="(tech, index) in technologies"
+                      :key="index"
+                      :href="tech.link"
+                      target="_blank"
+                      small
+                      outlined
+                      class="ma-1"
+                    >
+                      <v-avatar left>
+                        <v-img :src="tech.icon" :alt="tech.name" width="20" />
+                      </v-avatar>
+                      {{ tech.name }}
+                    </v-chip>
+                  </v-chip-group>
+                </div>
+              </v-col>
+
+              <!-- Right Column -->
+              <v-col cols="12" md="6" class="right-column">
+                <!-- Resource Links Section -->
+                <div class="resource-links">
+                  <h3 class="section-title text-h6 mb-4">
+                    <v-icon left>mdi-link</v-icon>
+                    Resources
+                  </h3>
+
+                  <v-btn
+                    href="https://github.com/twoj-projekt"
+                    target="_blank"
+                    color="black"
+                    class="mb-3"
+                    block
+                    depressed
+                  >
+                    <v-icon left>mdi-github</v-icon>
+                    GitHub Repository
+                  </v-btn>
+
+                  <v-btn
+                    href="https://github.com/twoj-projekt/blob/main/README.md"
+                    target="_blank"
+                    color="grey darken-2"
+                    class="mb-3"
+                    block
+                    depressed
+                  >
+                    <v-icon left>mdi-text-box</v-icon>
+                    Project README
+                  </v-btn>
+
+                  <v-btn
+                    color="primary"
+                    class="mb-3"
+                    block
+                    depressed
+                  >
+                    <v-icon left>mdi-file-document</v-icon>
+                    Documentation
+                  </v-btn>
+                </div>
+
+                <!-- Project Description -->
+                <div class="project-description mt-8">
+                  <h3 class="section-title text-h6 mb-2">
+                    <v-icon left>mdi-information</v-icon>
+                    Project Info
+                  </h3>
+                  <p class="text-body-2">
+                    This project was developed as part of our coursework,
+                    showcasing modern web development technologies and best practices.
+                  </p>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -61,11 +138,27 @@
 
 <script>
 export default {
-  name: 'HomePage'
+  data() {
+    return {
+      creators: [
+        'Owidiusz Zieliński',
+        'Aleksandra Wrzesień',
+        'Aleksandra Wójcicka',
+        'Michał Zaleśny'
+      ],
+      technologies: [
+        { name: 'PostgreSQL', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg', link: 'https://www.postgresql.org/' },
+        { name: 'Vue.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg', link: 'https://vuejs.org/' },
+        { name: 'Java', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg', link: 'https://java.com/' },
+        { name: 'Spring Boot', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg', link: 'https://spring.io/projects/spring-boot' },
+        { name: 'Docker', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg', link: 'https://www.docker.com/' },
+        { name: 'Vuetify', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuetify/vuetify-original.svg', link: 'https://vuetifyjs.com/' }
+      ]
+    }
+  }
 }
 </script>
 
-<style scoped>
 <style scoped>
 .home-page {
   background-color: #121212;
@@ -73,8 +166,7 @@ export default {
   padding: 40px 20px;
 }
 
-.welcome-container,
-.info-container {
+.welcome-container {
   width: 100%;
   max-width: 1200px;
   background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
@@ -85,140 +177,10 @@ export default {
   margin: 20px 0;
 }
 
-.welcome-title {
-  font-size: 3.5rem;
-  margin-bottom: 1rem;
-}
-
-.welcome-subtitle {
-  font-size: 2rem;
-}
-
-.info-title {
-  font-size: 2.5rem;
-  margin-bottom: 3rem;
-}
-
-.info-content {
-  display: flex;
-  justify-content: space-around;
-  gap: 3rem;
-  padding: 0 2rem;
-}
-
-.cta-button {
-  margin-top: 2rem;
-  font-size: 1.2rem;
-  padding: 20px 40px !important;
-}
-
-@media (max-width: 960px) {
-  .welcome-container,
-  .info-container {
-    padding: 3rem;
-    max-width: 800px;
-  }
-
-  .welcome-title {
-    font-size: 2.5rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 1.5rem;
-  }
-
-  .info-title {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .home-page {
-    padding: 20px 10px;
-  }
-
-  .welcome-container,
-  .info-container {
-    padding: 2rem 1.5rem;
-    border-radius: 16px;
-  }
-
-
-  .welcome-subtitle {
-    font-size: 1.2rem;
-  }
-
-  .info-content {
-    flex-direction: column;
-    padding: 0;
-  }
-
-  .decoration-line.vertical {
-    height: 2px;
-    width: 100%;
-    margin: 1.5rem 0;
-  }
-
-  .cta-button {
-    font-size: 1rem;
-    padding: 16px 32px !important;
-  }
-}
-
-/* Zachowane oryginalne style dekoracyjne */
-.welcome-title {
-  font-size: 2.8rem;
-  color: rgb(118, 74, 188);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(118, 74, 188, 0.3);
-}
-
-.welcome-subtitle {
-  font-size: 1.6rem;
-  color: rgba(118, 74, 188, 0.8);
-  font-weight: 300;
-  margin-top: 0;
-  letter-spacing: 1px;
-}
-
-.info-title {
-  font-size: 2rem;
-  color: rgb(118, 74, 188);
-  text-align: center;
-  margin-bottom: 2rem;
-  text-shadow: 0 0 10px rgba(118, 74, 188, 0.3);
-}
-
-.cta-button {
-  background: rgba(118, 74, 188, 0.2) !important;
-  color: rgb(118, 74, 188) !important;
-  border: 5px solid rgba(118, 74, 188, 0.3) !important;
-  letter-spacing: 1px;
-  transition: all 0.3s ease !important;
-}
-
-.cta-button:hover {
-  background: rgba(118, 74, 188, 0.3) !important;
-  box-shadow: 0 0 15px rgba(118, 74, 188, 0.2);
-  transform: translateY(-2px);
-}
-
-.welcome-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-  padding: 3rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(118, 74, 188, 0.2);
-}
-
 .welcome-card {
   text-align: center;
   max-width: 600px;
+  margin: 0 auto;
 }
 
 .welcome-title {
@@ -265,52 +227,25 @@ export default {
   animation: pulse 2s infinite;
 }
 
-.welcome-highlight::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, rgb(118, 74, 188), transparent);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.6s ease;
-}
-
-.welcome-card:hover .welcome-highlight::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-
-.info-container {
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-  border-radius: 16px;
-  padding: 2rem;
-  border: 1px solid rgba(118, 74, 188, 0.2);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
 .info-card {
+  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+  border: 1px solid rgba(118, 74, 188, 0.2);
   color: rgba(255, 255, 255, 0.9);
 }
 
 .info-title {
   font-size: 2rem;
   color: rgb(118, 74, 188);
-  text-align: center;
-  margin-bottom: 2rem;
   text-shadow: 0 0 10px rgba(118, 74, 188, 0.3);
 }
 
-.info-content {
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
+.left-column {
+  border-right: 1px solid rgba(118, 74, 188, 0.2);
+  padding-right: 32px;
 }
 
-.creators-section {
-  flex: 1;
+.right-column {
+  padding-left: 32px;
 }
 
 .section-title {
@@ -319,87 +254,74 @@ export default {
   margin-bottom: 1rem;
 }
 
-.creators-list {
-  list-style: none;
-  padding: 0;
-}
-
-.creator-item {
-  padding: 0.8rem 0;
+.creator-name {
   color: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid rgba(118, 74, 188, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.creator-item:hover {
-  transform: translateX(10px);
-  color: rgb(118, 74, 188);
-}
-
-.decoration-line.vertical {
-  width: 2px;
-  height: 200px;
-  background: linear-gradient(180deg, transparent, rgb(118, 74, 188), transparent);
-  opacity: 0.6;
-  margin: 0 1.5rem;
-}
-
-.actions-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.doc-link {
-  color: rgba(118, 74, 188, 0.8);
-  text-decoration: none;
-  position: relative;
-  padding: 0.5rem 0;
-  transition: color 0.3s ease;
-}
-
-.link-underline {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: rgb(118, 74, 188);
-  transition: width 0.3s ease;
-}
-
-.doc-link:hover .link-underline {
-  width: 100%;
-}
-
-.cta-button {
-  background: rgba(118, 74, 188, 0.2);
-  color: rgb(118, 74, 188);
-  padding: 12px 30px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 500;
   transition: all 0.3s ease;
-  border: 1px solid rgba(118, 74, 188, 0.3);
 }
 
-.cta-button:hover {
-  background: rgba(118, 74, 188, 0.3);
-  box-shadow: 0 0 15px rgba(118, 74, 188, 0.2);
-  transform: translateY(-2px);
+.creator-name:hover {
+  color: rgb(118, 74, 188);
+  transform: translateX(5px);
 }
 
-@media (max-width: 768px) {
-  .info-content {
-    flex-direction: column;
+.technologies-section {
+  margin-top: 2rem;
+}
+
+.resource-links {
+  margin-bottom: 2rem;
+}
+
+.project-description {
+  margin-top: 2rem;
+}
+
+@media (max-width: 960px) {
+  .welcome-container {
+    padding: 3rem;
   }
 
-  .decoration-line.vertical {
-    width: 30%;
-    height: 2px;
-    margin: 1.5rem 0;
+  .welcome-title {
+    font-size: 2.5rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 1.5rem;
+  }
+
+  .info-title {
+    font-size: 1.8rem;
+  }
+
+  .left-column {
+    border-right: none;
+    border-bottom: 1px solid rgba(118, 74, 188, 0.2);
+    padding-right: 0;
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+  }
+
+  .right-column {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-page {
+    padding: 20px 10px;
+  }
+
+  .welcome-container {
+    padding: 2rem 1.5rem;
+    border-radius: 16px;
+  }
+
+  .welcome-title {
+    font-size: 2rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 1.2rem;
   }
 }
 
