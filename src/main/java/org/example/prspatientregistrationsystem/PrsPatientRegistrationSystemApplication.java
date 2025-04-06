@@ -8,7 +8,6 @@ public class PrsPatientRegistrationSystemApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(PrsPatientRegistrationSystemApplication.class, args);
-    //TODO
   }
 
 }

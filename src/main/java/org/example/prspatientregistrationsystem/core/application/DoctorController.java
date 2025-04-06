@@ -21,6 +21,11 @@ public class DoctorController {
         return doctorService.findAll();
     }
 
+    @GetMapping(path = "fullname")
+    public List<String> getDoctorsFullName() {
+        return doctorService.findAllFullNames();
+    }
+
     @PostMapping
     public void addDoctor(@RequestBody DoctorAddCommand command) {
         doctorService.add(command);

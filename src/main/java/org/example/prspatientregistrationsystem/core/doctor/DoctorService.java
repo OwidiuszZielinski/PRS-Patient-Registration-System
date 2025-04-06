@@ -39,4 +39,9 @@ public class DoctorService {
         employeeWorkSchedules.forEach(employeeWorkScheduleService::add);
     }
 
+    public List<String> findAllFullNames() {
+        return findAll().stream()
+            .map(doctor -> "%s %s".formatted(doctor.firstName(), doctor.lastName()))
+            .toList();
+    }
 }
