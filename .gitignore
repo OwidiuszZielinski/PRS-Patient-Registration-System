@@ -13,7 +13,7 @@ target/
 bin/
 
 # Maven
-target/
+.target/
 
 # Gradle
 .gradle/

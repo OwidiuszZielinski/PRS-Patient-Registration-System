@@ -54,6 +54,7 @@ export default defineConfig({
       usePolling: true,
     },
     host: true,
+    allowedHosts: ['prs.blackcloud-dev.com'],
   },
   css: {
     preprocessorOptions: {
