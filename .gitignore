@@ -1,26 +1,38 @@
-# Compiled class file
-*.class
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
 
-# Log file
+# Eclipse
+.project
+.classpath
+.csettings/
+.settings/
+target/
+bin/
+
+# Maven
+target/
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs
 *.log
+logs/
 
-*.idea
-# BlueJ files
-*.ctxt
-*.target
+# OS-specific
+.DS_Store
+Thumbs.db
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# Environment files
+.env
+# Docker
+*.container
+*.pid
+*.tar
+*.bak
+*.backup
