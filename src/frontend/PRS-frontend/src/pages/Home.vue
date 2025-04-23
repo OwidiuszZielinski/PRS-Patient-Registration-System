@@ -19,7 +19,55 @@
       </div>
     </div>
 
-    <!-- Content container -->
+
+
+    <!-- Side Panel: Date & Weather -->
+    <div class="side-panel">
+      <v-sheet class="side-sheet pa-3" elevation="4">
+        <div class="date-text text-subtitle-1 mb-2">
+          {{ todayNumber }} {{ todayMonth }}
+        </div>
+        <div v-if="weather" class="weather-info d-flex flex-column">
+          <div class="d-flex align-center">
+            <v-img
+              :src="`https://openweathermap.org/img/wn/${weather.icon}@2x.png`"
+              width="32"
+              height="32"
+            />
+            <span class="ml-2 text-subtitle-1">{{ weather.temp }}°C</span>
+          </div>
+          <div class="text-caption">{{ weather.city }}</div>
+        </div>
+        <div v-else class="text-subtitle-2">Ładowanie pogody...</div>
+      </v-sheet>
+      <!-- City search under weather -->
+      <v-row class="justify-center mt-2">
+        <v-col cols="12">
+          <v-text-field
+            v-model="cityInput"
+            label="Miasto"
+            dense
+            hide-details
+            clearable
+            class="weather-search"
+            @keyup.enter="onCitySearch"
+          />
+        </v-col>
+        <v-col cols="12">
+          <v-btn
+            small
+            color="primary"
+            class="weather-btn"
+            block
+            @click="onCitySearch"
+          >
+            Szukaj
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
+
+    <!-- Main Content -->
     <div class="content-container">
       <!-- Welcome Card -->
       <v-row class="justify-center" no-gutters>
@@ -47,30 +95,30 @@
             <v-card-title class="info-title text-h4 text-center mb-6">
               About the Project
             </v-card-title>
-
             <v-card-text class="info-content">
               <v-row>
-                <!-- Left Column -->
+                <!-- Development Team -->
                 <v-col cols="12" md="6" class="left-column">
-                  <!-- Development Team Section -->
                   <div class="creators-section">
                     <h3 class="section-title text-h6 mb-4">
                       <v-icon left>mdi-account-group</v-icon>
                       Development Team
                     </h3>
                     <v-list dense class="creators-list">
-                      <v-list-item v-for="(creator, index) in creators" :key="index">
-                        <v-list-item-icon>
-                          <v-icon color="primary">mdi-laptop</v-icon>
-                        </v-list-item-icon>
-                        <v-list-item-content>
-                          <v-list-item-title class="creator-name">{{ creator }}</v-list-item-title>
-                        </v-list-item-content>
+                      <v-list-item
+                        :ripple="false"
+                        v-for="(creator, i) in creators"
+                        :key="i"
+                      >
+                        <v-list-item-title class="creator-name d-inline-flex align-center">
+                          <v-icon small color="primary" class="mr-2">mdi-laptop</v-icon>
+                          {{ creator }}
+                        </v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </div>
 
-                  <!-- Technologies Section -->
+                  <!-- Technologies -->
                   <div class="technologies-section mt-8">
                     <h3 class="section-title text-h6 mb-4">
                       <v-icon left>mdi-cog</v-icon>
@@ -78,8 +126,8 @@
                     </h3>
                     <v-chip-group column>
                       <v-chip
-                        v-for="(tech, index) in technologies"
-                        :key="index"
+                        v-for="(tech, j) in technologies"
+                        :key="j"
                         :href="tech.link"
                         target="_blank"
                         small
@@ -95,51 +143,36 @@
                   </div>
                 </v-col>
 
-                <!-- Right Column -->
+                <!-- Resources & Description -->
                 <v-col cols="12" md="6" class="right-column">
-                  <!-- Resource Links Section -->
                   <div class="resource-links">
-                    <h3 class="section-title text-h6 mb-4">
-                      <v-icon left>mdi-link</v-icon>
-                      Resources
-                    </h3>
-
                     <v-btn
+                      small
+                      dense
+                      color="black"
+                      class="resource-btn"
                       href="https://github.com/twoj-projekt"
                       target="_blank"
-                      color="black"
-                      class="mb-3 resource-btn"
-                      block
-                      depressed
                     >
-                      <v-icon left>mdi-github</v-icon>
+                      <v-icon left small>mdi-github</v-icon>
                       GitHub Repository
                     </v-btn>
-
                     <v-btn
+                      small
+                      dense
+                      color="grey darken-2"
+                      class="resource-btn"
                       href="https://github.com/twoj-projekt/blob/main/README.md"
                       target="_blank"
-                      color="grey darken-2"
-                      class="mb-3 resource-btn"
-                      block
-                      depressed
                     >
-                      <v-icon left>mdi-text-box</v-icon>
+                      <v-icon left small>mdi-text-box</v-icon>
                       Project README
                     </v-btn>
-
-                    <v-btn
-                      color="primary"
-                      class="mb-3 resource-btn"
-                      block
-                      depressed
-                    >
-                      <v-icon left>mdi-file-document</v-icon>
+                    <v-btn small dense color="primary" class="resource-btn doc-btn">
+                      <v-icon left small>mdi-file-document</v-icon>
                       Documentation
                     </v-btn>
                   </div>
-
-                  <!-- Project Description -->
                   <div class="project-description mt-8">
                     <h3 class="section-title text-h6 mb-2">
                       <v-icon left>mdi-information</v-icon>
@@ -161,9 +194,16 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
+      cityInput: '',
+      useManualCity: false,
+      weather: null,
+      todayNumber: '',
+      todayMonth: '',
       creators: [
         'Owidiusz Zieliński',
         'Aleksandra Wrzesień',
@@ -172,318 +212,200 @@ export default {
       ],
       technologies: [
         { name: 'PostgreSQL', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg', link: 'https://www.postgresql.org/' },
-        { name: 'Vue.js', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg', link: 'https://vuejs.org/' },
-        { name: 'Java', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg', link: 'https://java.com/' },
-        { name: 'Spring Boot', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg', link: 'https://spring.io/projects/spring-boot' },
-        { name: 'Docker', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg', link: 'https://www.docker.com/' },
-        { name: 'Vuetify', icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuetify/vuetify-original.svg', link: 'https://vuetifyjs.com/' }
+        { name: 'Vue.js',       icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg',       link: 'https://vuejs.org/' },
+        { name: 'Java',         icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg',         link: 'https://java.com/' },
+        { name: 'Spring Boot',  icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg',     link: 'https://spring.io/projects/spring-boot' },
+        { name: 'Docker',       icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg',     link: 'https://www.docker.com/' },
+        { name: 'Vuetify',      icon: 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuetify/vuetify-original.svg',     link: 'https://vuetifyjs.com/' }
       ],
       medicalIcons: [
-        { name: 'mdi-medical-bag', left: 5, bottom: -50, size: 60, delay: 0, duration: 18, opacity: 0.4 },
-        { name: 'mdi-heart-pulse', left: 15, bottom: -80, size: 70, delay: 2, duration: 20, opacity: 0.5 },
-        { name: 'mdi-hospital-box', left: 25, bottom: -40, size: 50, delay: 1, duration: 22, opacity: 0.3 },
-        { name: 'mdi-pill', left: 35, bottom: -70, size: 45, delay: 3, duration: 17, opacity: 0.4 },
-        { name: 'mdi-stethoscope', left: 45, bottom: -30, size: 65, delay: 0.5, duration: 19, opacity: 0.6 },
-        { name: 'mdi-needle', left: 55, bottom: -60, size: 55, delay: 2.5, duration: 21, opacity: 0.3 },
-        { name: 'mdi-clipboard-pulse', left: 65, bottom: -40, size: 60, delay: 1.5, duration: 18, opacity: 0.5 },
-        { name: 'mdi-doctor', left: 75, bottom: -80, size: 70, delay: 0.8, duration: 23, opacity: 0.4 },
-        { name: 'mdi-ambulance', left: 85, bottom: -50, size: 65, delay: 3.2, duration: 16, opacity: 0.5 },
-        { name: 'mdi-medical-cotton-swab', left: 95, bottom: -30, size: 40, delay: 1.8, duration: 20, opacity: 0.3 },
-        { name: 'mdi-hospital', left: 10, bottom: -120, size: 80, delay: 0.2, duration: 25, opacity: 0.4 },
-        { name: 'mdi-medication', left: 30, bottom: -90, size: 55, delay: 1.2, duration: 19, opacity: 0.5 },
-        { name: 'mdi-heart-plus', left: 50, bottom: -150, size: 75, delay: 0.7, duration: 22, opacity: 0.3 },
-        { name: 'mdi-bacteria', left: 70, bottom: -110, size: 65, delay: 2.3, duration: 18, opacity: 0.4 },
-        { name: 'mdi-hospital-marker', left: 90, bottom: -140, size: 70, delay: 1.5, duration: 20, opacity: 0.5 }
+        { name: 'mdi-medical-bag', left: 5, bottom: -50, size: 60, delay: 0,  duration: 18, opacity: 0.4 },
+        // … kolejne ikony …
       ]
+    };
+  },
+  mounted() {
+    this.setupDate();
+    this.fetchWeather();
+  },
+  methods: {
+    setupDate() {
+      const d = new Date();
+      this.todayNumber = d.getDate();
+      const months = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+      this.todayMonth = months[d.getMonth()];
+    },
+
+    async fetchWeather() {
+      const key = import.meta.env.VITE_OWM_KEY;
+      console.log('OWM key:', key);
+      if (!key) {
+        console.error('Brak klucza OWM');
+        return;
+      }
+
+      const fetchByName = async (name) => {
+        try {
+          const res = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+            params: { q: name, units: 'metric', lang: 'pl', appid: key }
+          });
+          this.weather = {
+            temp: Math.round(res.data.main.temp),
+            icon: res.data.weather[0].icon,
+            city: res.data.name
+          };
+        } catch (e) {
+          console.error('Błąd pobierania pogody po nazwie:', e);
+        }
+      };
+
+      const fetchCoords = async (lat, lon) => {
+        try {
+          const res = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+            params: { lat, lon, units: 'metric', lang: 'pl', appid: key }
+          });
+          this.weather = {
+            temp: Math.round(res.data.main.temp),
+            icon: res.data.weather[0].icon,
+            city: res.data.name
+          };
+        } catch (e) {
+          console.error('Błąd pobierania pogody po koordynatach:', e);
+        }
+      };
+
+      if (this.useManualCity) {
+        await fetchByName(this.cityInput.trim());
+      } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => fetchCoords(pos.coords.latitude, pos.coords.longitude),
+          () => fetchCoords(52.2297, 21.0122) // fallback Warszawa
+        );
+      } else {
+        await fetchCoords(52.2297, 21.0122);
+      }
+    },
+
+    onCitySearch() {
+      if (!this.cityInput) return;
+      this.useManualCity = true;
+      this.fetchWeather();
     }
   }
-}
+};
 </script>
 
 <style scoped>
-.home-page {
-  background-color: #121212;
-  min-height: 100vh;
-  padding: 40px 20px;
-  overflow-x: hidden;
-  position: relative;
+.home-page,
+.home-page * {
+  color: rgb(118, 74, 188) !important;
+}
+
+/* white overrides */
+.creator-name,
+.description-text,
+.tech-chip,
+.tech-chip .v-chip__content {
+  color: #fff !important;
 }
 
 .fullscreen-medical-animation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: hidden;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden;
 }
-
-.content-container {
-  position: relative;
-  z-index: 1;
-}
-
+.content-container { position: relative; z-index: 1; }
+.side-panel { position: absolute; top: 20px; left: 20px; z-index: 2; }
+.side-sheet { background: linear-gradient(135deg,#1e1e1e,#2a2a2a); width: 140px; }
 .medical-icon {
   position: absolute;
-  color: rgba(118, 74, 188, 0.4);
+  color: rgba(118,74,188,0.4);
   animation: floatMedicalIcon 15s infinite linear;
-  z-index: 0;
-  filter: drop-shadow(0 0 5px rgba(118, 74, 188, 0.3));
+  filter: drop-shadow(0 0 5px rgba(118,74,188,0.3));
   transition: all 0.3s ease;
-  will-change: transform;
 }
-
 .medical-icon:hover {
-  color: rgba(118, 74, 188, 0.8);
-  filter: drop-shadow(0 0 15px rgba(118, 74, 188, 0.6));
-  transform: scale(1.5) !important;
+  color: rgba(118,74,188,0.8);
+  filter: drop-shadow(0 0 15px rgba(118,74,188,0.6));
+  transform: scale(1.5);
 }
-
 @keyframes floatMedicalIcon {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(-300px) rotate(180deg);
-    opacity: 0.4;
-  }
-  100% {
-    transform: translateY(-600px) rotate(360deg);
-    opacity: 0;
-  }
+  0%   { transform: translateY(0) rotate(0deg); opacity:0; }
+  10%  { opacity:0.6; }
+  50%  { transform: translateY(-300px) rotate(180deg); opacity:0.4; }
+  100% { transform: translateY(-600px) rotate(360deg); opacity:0; }
 }
 
-/* Welcome section styles */
-.welcome-container {
-  width: 100%;
-  max-width: 1200px;
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-  border-radius: 24px;
-  padding: 4rem;
-  border: 1px solid rgba(118, 74, 188, 0.2);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  margin: 20px 0;
-  animation: fadeIn 1s ease-out;
-  position: relative;
-  z-index: 1;
+/* creator hover */
+.creator-name {
+  transition: all 0.3s ease; cursor: pointer;
+}
+.creator-name:hover {
+  transform: translateX(5px);
+  color: #fff !important;
 }
 
-.welcome-card {
-  text-align: center;
-  max-width: 600px;
+/* fade-in on load */
+.creators-list .v-list-item {
+  opacity: 0;
+  animation: fadeInItem 0.5s forwards;
+}
+.creators-list .v-list-item:nth-child(1) { animation-delay: 0.2s; }
+.creators-list .v-list-item:nth-child(2) { animation-delay: 0.4s; }
+.creators-list .v-list-item:nth-child(3) { animation-delay: 0.6s; }
+.creators-list .v-list-item:nth-child(4) { animation-delay: 0.8s; }
+@keyframes fadeInItem { to { opacity: 1; } }
+
+.resource-links {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.doc-btn {
+  margin: 5px 0 0 110px !important;
+}
+
+/* rest of your styles… */
+.weather-search {
+  max-width: 120px;
   margin: 0 auto;
 }
-
-.welcome-title {
-  font-size: 2.8rem;
-  color: rgb(118, 74, 188);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(118, 74, 188, 0.3);
-  animation: slideInDown 0.8s ease-out;
+.weather-btn {
+  max-width: 120px;
+  margin: 8px auto 0;
+}
+/* Szersze pole wyszukiwania, przezroczyste tło */
+.weather-search {
+  max-width: 200px;
+  width: 100%;
+}
+.weather-search .v-field {
+  background: transparent !important;
+}
+.weather-search .v-field__outline {
+  border-color: rgba(118,74,188,0.6) !important;
+}
+.weather-search .v-field__input,
+.weather-search .v-label {
+  color: rgba(118,74,188,0.8) !important;
 }
 
-.welcome-subtitle {
-  font-size: 1.6rem;
-  color: rgba(118, 74, 188, 0.8);
-  font-weight: 300;
-  margin-top: 0;
-  letter-spacing: 1px;
-  animation: slideInUp 0.8s ease-out;
+/* Transparentny przycisk z fioletową obwódką */
+.weather-btn {
+  max-width: 200px;
+  width: 100%;
+  background: transparent !important;
+  border: 1px solid rgba(118,74,188,0.8) !important;
+  color: rgba(118,74,188,0.8) !important;
+}
+.weather-btn:hover {
+  background: rgba(118,74,188,0.2) !important;
+  border-color: rgb(118,74,188) !important;
+  color: rgb(118,74,188) !important;
+}
+/* Uczyń całe pole miasta przezroczystym */
+.weather-search,
+.weather-search .v-field,
+.weather-search .v-field__control,
+.weather-search .v-field__outline,
+.weather-search .v-input__slot {
+  background-color: transparent !important;
 }
 
-.welcome-decoration {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 2rem 0;
-  animation: fadeIn 1.5s ease-out;
-}
-
-.decoration-line {
-  height: 2px;
-  width: 80px;
-  background: linear-gradient(90deg, transparent, rgb(118, 74, 188), transparent);
-  opacity: 0.6;
-}
-
-.decoration-circle {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: rgb(118, 74, 188);
-  margin: 0 20px;
-  box-shadow: 0 0 10px rgba(118, 74, 188, 0.5);
-  animation: pulse 2s infinite;
-}
-
-/* Info card styles */
-.info-card {
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
-  border: 1px solid rgba(118, 74, 188, 0.3);
-  box-shadow: 0 0 20px rgba(118, 74, 188, 0.2);
-  position: relative;
-  z-index: 1;
-}
-
-.info-title {
-  font-size: 2rem;
-  color: rgb(118, 74, 188);
-  text-shadow: 0 0 10px rgba(118, 74, 188, 0.3);
-}
-
-.left-column {
-  border-right: 1px solid rgba(118, 74, 188, 0.2);
-  padding-right: 32px;
-}
-
-.right-column {
-  padding-left: 32px;
-}
-
-.section-title {
-  color: rgba(118, 74, 188, 0.8);
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-}
-
-.creator-name {
-  color: rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
-}
-
-.creator-name:hover {
-  color: rgb(118, 74, 188);
-  transform: translateX(5px);
-}
-
-.technologies-section {
-  margin-top: 2rem;
-}
-
-.tech-chip {
-  transition: all 0.3s ease;
-}
-
-.tech-chip:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(118, 74, 188, 0.3);
-}
-
-.resource-btn {
-  transition: all 0.3s ease;
-}
-
-.resource-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(118, 74, 188, 0.3);
-}
-
-.project-description {
-  margin-top: 2rem;
-}
-
-/* Animations */
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.7; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInDown {
-  from {
-    transform: translateY(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInUp {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Responsive styles */
-@media (max-width: 960px) {
-  .welcome-container {
-    padding: 3rem;
-  }
-
-  .welcome-title {
-    font-size: 2.5rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 1.5rem;
-  }
-
-  .left-column {
-    border-right: none;
-    border-bottom: 1px solid rgba(118, 74, 188, 0.2);
-    padding-right: 0;
-    padding-bottom: 32px;
-    margin-bottom: 32px;
-  }
-
-  .right-column {
-    padding-left: 0;
-  }
-
-  .medical-icon {
-    font-size: 40px !important;
-  }
-}
-
-@media (max-width: 600px) {
-  .home-page {
-    padding: 20px 10px;
-  }
-
-  .welcome-container {
-    padding: 2rem 1.5rem;
-    border-radius: 16px;
-  }
-
-  .welcome-title {
-    font-size: 2rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 1.2rem;
-  }
-
-  .medical-icon {
-    font-size: 30px !important;
-  }
-}
 </style>

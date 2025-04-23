@@ -1,6 +1,10 @@
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\application\DoctorController.java
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\Doctor.java
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorDto.java
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorRepository.java
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorService.java
-C:\Users\owidiusz\Desktop\studia\isi\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\PrsPatientRegistrationSystemApplication.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\application\DoctorController.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\commad\DoctorAddCommand.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\Doctor.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorDto.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorRepository.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\doctor\DoctorService.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\employeeworkschedule\EmployeeWorkSchedule.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\employeeworkschedule\EmployeeWorkScheduleRepository.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\core\employeeworkschedule\EmployeeWorkScheduleService.java
+C:\Users\Micha\Desktop\PSR\PRS-Patient-Registration-System\src\main\java\org\example\prspatientregistrationsystem\PrsPatientRegistrationSystemApplication.java
