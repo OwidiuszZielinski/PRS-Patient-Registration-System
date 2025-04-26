@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.prspatientregistrationsystem.core.employeeworkschedule.EmployeeWorkSchedule;
+import org.example.prspatientregistrationsystem.core.employeeworkschedule.DoctorSchedule;
 
 import java.util.List;
 
@@ -23,6 +23,6 @@ public class Doctor {
     private String lastName;
     private String licenseNumber;
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EmployeeWorkSchedule> employeeWorkSchedules;
+    private List<DoctorSchedule> doctorSchedules;
 
 }

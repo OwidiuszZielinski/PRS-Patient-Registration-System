@@ -1,7 +1,7 @@
 package org.example.prspatientregistrationsystem.core.doctor.commad;
 
 import lombok.Builder;
-import org.example.prspatientregistrationsystem.core.employeeworkschedule.EmployeeWorkSchedule;
+import org.example.prspatientregistrationsystem.core.employeeworkschedule.DoctorSchedule;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ public record DoctorAddCommand(
     String firstName,
     String lastName,
     String licenseNumber,
-    List<EmployeeWorkSchedule> employeeWorkSchedules
+    List<DoctorSchedule> doctorSchedules
 ) {
 
 }

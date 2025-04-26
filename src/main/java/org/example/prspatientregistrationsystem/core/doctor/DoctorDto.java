@@ -1,9 +1,9 @@
 package org.example.prspatientregistrationsystem.core.doctor;
 
 import lombok.Builder;
-import org.example.prspatientregistrationsystem.core.employeeworkschedule.EmployeeWorkSchedule;
+import org.example.prspatientregistrationsystem.core.employeeworkschedule.DoctorSchedule;
 
-import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -13,7 +13,7 @@ public record DoctorDto(
         String firstName,
         String lastName,
         String licenseNumber,
-        List<EmployeeWorkScheduleDto> employeeWorkSchedules
+        List<DoctorScheduleDto> doctorSchedules
 ) {
 
     public static DoctorDto mapToDoctor(Doctor doctor) {
@@ -22,9 +22,9 @@ public record DoctorDto(
                 .firstName(doctor.getFirstName())
                 .lastName(doctor.getLastName())
                 .licenseNumber(doctor.getLicenseNumber())
-                .employeeWorkSchedules(doctor.getEmployeeWorkSchedules()
+                .doctorSchedules(doctor.getDoctorSchedules()
                         .stream()
-                        .map(EmployeeWorkScheduleDto::of)
+                        .map(DoctorScheduleDto::of)
                         .toList())
                 .build();
     }
@@ -32,24 +32,28 @@ public record DoctorDto(
 
 
 @Builder
-record EmployeeWorkScheduleDto(
+record DoctorScheduleDto(
         Long id,
-        DayOfWeek dayOfWeek,
+        Long doctorId,
+        LocalDate scheduleDate,
+        Boolean isWorkingDay,
+        Boolean isVacation,
         LocalTime startTime,
-        LocalTime endTime,
-        Long doctorId
+        LocalTime endTime
 ) {
-    static EmployeeWorkScheduleDto of(EmployeeWorkSchedule employeeWorkSchedule) {
+    static DoctorScheduleDto of(DoctorSchedule employeeWorkSchedule) {
         Long id = 0L;
         if (employeeWorkSchedule.getDoctor() != null) {
             id = employeeWorkSchedule.getDoctor().getDoctorId();
         }
-        return EmployeeWorkScheduleDto.builder()
-                .id(employeeWorkSchedule.getId())
-                .dayOfWeek(employeeWorkSchedule.getDayOfWeek())
-                .startTime(employeeWorkSchedule.getStartTime())
-                .endTime(employeeWorkSchedule.getEndTime())
-                .doctorId(id)
+        return DoctorScheduleDto.builder()
+            .id(employeeWorkSchedule.getId())
+            .doctorId(id)
+            .scheduleDate(employeeWorkSchedule.getScheduleDate())
+            .isWorkingDay(employeeWorkSchedule.isWorkingDay())
+            .isVacation(employeeWorkSchedule.isVacation())
+            .startTime(employeeWorkSchedule.getStartTime())
+            .endTime(employeeWorkSchedule.getEndTime())
                 .build();
     }
 }
