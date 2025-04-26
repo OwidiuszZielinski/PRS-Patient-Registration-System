@@ -77,3 +77,14 @@ This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library wi
 [MIT](http://opensource.org/licenses/MIT)
 
 Copyright (c) 2016-present Vuetify, LLC
+
+---
+
+## Konfiguracja środowiska
+
+Aby aplikacja mogła pobierać pogodę, musisz dostarczyć swój klucz API:
+
+1. Sklonuj repozytorium i przejdź do katalogu projektu frontend:
+   ```bash
+   cd PRS-frontend
+
