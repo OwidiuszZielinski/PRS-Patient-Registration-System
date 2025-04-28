@@ -80,11 +80,5 @@ Copyright (c) 2016-present Vuetify, LLC
 
 ---
 
-## Konfiguracja środowiska
 
-Aby aplikacja mogła pobierać pogodę, musisz dostarczyć swój klucz API:
-
-1. Sklonuj repozytorium i przejdź do katalogu projektu frontend:
-   ```bash
-   cd PRS-frontend
 
