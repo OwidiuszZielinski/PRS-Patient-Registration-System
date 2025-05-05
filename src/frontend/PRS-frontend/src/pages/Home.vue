@@ -260,7 +260,7 @@ export default {
     },
 
     async fetchWeather() {
-      const key = import.meta.env.VITE_OWM_KEY;
+      const key = '5bdbb4c04b3e437e24390b30ac4dc569'
       console.log('OWM key:', key);
       if (!key) {
         console.error('Brak klucza OWM');
