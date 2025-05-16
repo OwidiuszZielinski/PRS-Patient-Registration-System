@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface DoctorScheduleRepo extends JpaRepository<DoctorSchedule, Long> {
   List<DoctorSchedule> findByDoctorAndScheduleDateIn(Doctor doctor, List<LocalDate> dates);
+
+  void deleteDoctorScheduleByDoctor_DoctorId(Long doctorId);
 }

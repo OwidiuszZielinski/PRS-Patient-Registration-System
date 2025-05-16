@@ -12,8 +12,10 @@
   "dependencies": {
     "@mdi/font": "^7.4.47",
     "axios": "^1.8.4",
+    "flatpickr": "^4.6.13",
     "roboto-fontface": "*",
     "vue": "^3.4.31",
+    "vue-flatpickr-component": "^12.0.0",
     "vuetify": "^3.8.0"
   },
   "devDependencies": {

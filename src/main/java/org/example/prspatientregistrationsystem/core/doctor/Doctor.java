@@ -19,6 +19,7 @@ public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long doctorId;
+    private Long officeId;
     private String firstName;
     private String lastName;
     private String licenseNumber;

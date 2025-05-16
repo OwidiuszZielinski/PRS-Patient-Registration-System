@@ -10,15 +10,17 @@ import java.util.List;
 @Builder
 public record DoctorDto(
         Long id,
+        Long officeId,
         String firstName,
         String lastName,
         String licenseNumber,
         List<DoctorScheduleDto> doctorSchedules
 ) {
 
-    public static DoctorDto mapToDoctor(Doctor doctor) {
+    public static DoctorDto mapToDto(Doctor doctor) {
         return DoctorDto.builder()
                 .id(doctor.getDoctorId())
+                .officeId(doctor.getOfficeId())
                 .firstName(doctor.getFirstName())
                 .lastName(doctor.getLastName())
                 .licenseNumber(doctor.getLicenseNumber())
@@ -27,6 +29,34 @@ public record DoctorDto(
                         .map(DoctorScheduleDto::of)
                         .toList())
                 .build();
+    }
+
+    public Doctor toDoctor() {
+        return Doctor.builder()
+                .doctorId(this.id)
+                .officeId(this.officeId)
+                .firstName(this.firstName)
+                .lastName(this.lastName)
+                .licenseNumber(this.licenseNumber)
+                .doctorSchedules(
+                        buildDoctorSchedules()
+                )
+                .build();
+    }
+
+    private List<DoctorSchedule> buildDoctorSchedules() {
+        return !this.doctorSchedules.isEmpty() ?
+                this.doctorSchedules.stream()
+                        .map(dto -> DoctorSchedule.builder()
+                                    .id(dto.id())
+                                    .doctor(this.toDoctor())
+                                    .scheduleDate(dto.scheduleDate())
+                                    .isWorkingDay(dto.isWorkingDay())
+                                    .isVacation(dto.isVacation())
+                                    .startTime(dto.startTime())
+                                    .endTime(dto.endTime())
+                                    .build()
+                        ).toList() : List.of();
     }
 }
 
