@@ -16,8 +16,8 @@ public class RegistrationController {
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @PostMapping(value = "/register" ,consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public AppUser register(AppUser user) {
+    @PostMapping(value = "/register", consumes = "application/json")
+    public AppUser register(@RequestBody AppUser user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return appUserRepository.save(user);
     }

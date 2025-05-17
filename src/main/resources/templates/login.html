@@ -1,38 +1,56 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <title>Logowanie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <script src="/js/signup.js" defer></script>
 </head>
 <body>
-<section>
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="login-title">Logowanie</h1>
 
-    <form action="/login" method="post">
-        <h1>Login</h1>
-        <div class="dialog-row">
-            <label th:if="${param.error}" th:text="${session['SPRING_SECURITY_LAST_EXCEPTION'].message}" class="text-center redText"></label>
+        <form action="/login" method="post" class="login-form">
+            <div class="input-field">
+                <i class="mdi mdi-user input-icon"></i>
+                <input type="text" name="username" id="username" required placeholder="Username">
+                <!-- usunąłem label i dałem placeholder w inpucie -->
+            </div>
+
+            <div class="input-field">
+                <i class="mdi mdi-lock input-icon"></i>
+                <input type="password" name="password" id="password" required placeholder="Password">
+                <i class="mdi mdi-eye-off password-toggle" id="togglePassword"></i>
+            </div>
+
+            <div class="login-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    <span>Zapamiętaj mnie</span>
+                </label>
+                <a href="#" class="forgot-password">Zapomniałeś hasła?</a>
+            </div>
+
+            <button type="submit" class="login-button">ZALOGUJ SIĘ</button>
+        </form>
+
+        <div class="register-link">
+            <span>Nie masz konta?</span>
+            <a href="/register">Zarejestruj się</a>
         </div>
-        <div class="inputbox">
-            <ion-icon name="email-outline"></ion-icon>
-            <input name="username" id="username"type="name" required>
-            <label for="">username</label>
-        </div>
-        <div class="inputbox">
-            <ion-icon name="lock-closed-outline"></ion-icon>
-            <input name="password" type="password" id="password" required>
-            <label for="">Password</label>
-        </div>
-        <div class="register">
-            <p><a href="#">Forget Password ?</a></p>
-        </div>
-        <button>Log in</button>
-        <div class="register">
-            <p>Don't have a account ?<a href="/register"> Register!!</a></p>
-        </div>
-    </form>
-</section>
+    </div>
+</div>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('mdi-eye-off');
+        this.classList.toggle('mdi-eye');
+    });
+</script>
 </body>
+</html>
