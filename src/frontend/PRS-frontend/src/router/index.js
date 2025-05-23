@@ -1,16 +1,16 @@
 import {createRouter, createWebHistory} from 'vue-router'
-import Login from '@/pages/Login.vue'
 import Home from '@/pages/Home.vue'
 import WaitingRoom from '@/pages/WaitingRoom.vue'
 import DoctorPanel from "@/pages/DoctorPanel.vue";
 import RegistryPanel from "@/pages/RegistryPanel.vue";
+import LogoutPanel from "@/pages/LogoutPanel.vue";
 
 const routes = [
   {path: '/', component: Home},
-  {path: '/login', component: Login},
   {path: '/waiting-room', component: WaitingRoom},
   {path: '/doctor', component: DoctorPanel},
-  {path: '/registry', component: RegistryPanel}
+  {path: '/registry', component: RegistryPanel},
+  {path: '/logout', component: LogoutPanel}
 ]
 
 const router = createRouter({

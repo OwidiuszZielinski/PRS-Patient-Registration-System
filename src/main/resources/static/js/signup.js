@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const passwordInput = document.querySelector('#password');
         const confirmPasswordInput = document.querySelector('#passwordcon');
 
-        // Check for a valid email and password
         const isValid = emailInput.checkValidity() && passwordInput.checkValidity() && confirmPasswordInput.checkValidity();
 
         if (!isValid) {

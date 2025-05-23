@@ -16,8 +16,4 @@ public class UserController {
         return "signup";
     }
 
-    @GetMapping("/index")
-    public String home() {
-        return "index";
-    }
 }
