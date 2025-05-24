@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api/doctors/";
+const BASE_URL = "http://localhost:8080/api/doctor/";
 
 export default {
   getDoctors() {

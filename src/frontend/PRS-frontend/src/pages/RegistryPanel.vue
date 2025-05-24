@@ -1,31 +1,29 @@
 <template>
   <v-app>
     <v-container>
-      <!-- Nagłówek -->
+      <!-- Header -->
       <v-row class="mb-6">
         <v-col cols="12">
           <v-toolbar color="#764ABC" dark flat>
-            <v-toolbar-title>Panel rejestratorki</v-toolbar-title>
+            <v-toolbar-title>Registration</v-toolbar-title>
             <v-spacer/>
-            <v-btn text @click="logout">Wyloguj</v-btn>
           </v-toolbar>
         </v-col>
       </v-row>
 
-      <!-- Zakładki -->
+      <!-- Tabs -->
       <v-tabs v-model="tab" grow>
-        <v-tab value="add">Dodaj wizytę</v-tab>
-        <v-tab value="list">Lista wizyt</v-tab>
-        <v-tab value="schedule">Grafiki lekarzy</v-tab>
+        <v-tab value="add">Add visit</v-tab>
+        <v-tab value="list">Visits</v-tab>
+        <v-tab value="schedule">Schedules</v-tab>
       </v-tabs>
 
       <v-window v-model="tab">
-        <!-- Dodawanie wizyty -->
+        <!-- Add Visit -->
         <v-window-item value="add">
           <v-card flat class="pa-4 mt-4">
             <v-form ref="appointmentForm" @submit.prevent="addAppointment">
               <v-row>
-                <!-- Lekarz -->
                 <v-col cols="12" md="6">
                   <v-select
                     v-model="newAppointment.doctor"
@@ -38,18 +36,6 @@
                   />
                 </v-col>
 
-                <!-- Gabinet -->
-                <v-col cols="12" md="6">
-                  <v-select
-                    v-model="newAppointment.office"
-                    :items="offices"
-                    label="Gabinet"
-                    :rules="officeRules"
-                    required
-                  />
-                </v-col>
-
-                <!-- Pacjent -->
                 <v-col cols="12" md="6">
                   <v-text-field
                     v-model="newAppointment.patient"
@@ -59,20 +45,18 @@
                   />
                 </v-col>
 
-                <!-- Data wizyty -->
                 <v-col cols="12" md="6">
                   <v-date-input
                     v-model="newAppointment.date"
                     label="Data wizyty"
                     :rules="dateRules"
-                    placeholder="dd/mm/yyyy "
+                    placeholder="dd/mm/yyyy"
                     :display-format="dateFormat"
                     :first-day-of-week="1"
                     locale="pl"
                   />
                 </v-col>
 
-                <!-- Godzina wizyty -->
                 <v-col cols="12" md="6">
                   <v-menu
                     v-model="timePicker"
@@ -103,7 +87,6 @@
                   </v-menu>
                 </v-col>
 
-                <!-- Uwagi -->
                 <v-col cols="12">
                   <v-textarea
                     v-model="newAppointment.notes"
@@ -111,7 +94,6 @@
                   />
                 </v-col>
 
-                <!-- Akcje -->
                 <v-col cols="12">
                   <v-btn type="submit" color="primary">Dodaj wizytę</v-btn>
                   <v-btn class="ml-2" @click="resetForm">Wyczyść</v-btn>
@@ -121,7 +103,7 @@
           </v-card>
         </v-window-item>
 
-        <!-- Lista wizyt -->
+        <!-- Visit List -->
         <v-window-item value="list">
           <v-card flat class="pa-4 mt-4">
             <v-data-table
@@ -138,7 +120,7 @@
           </v-card>
         </v-window-item>
 
-        <!-- Grafik lekarzy -->
+        <!-- Doctor Schedules -->
         <v-window-item value="schedule">
           <v-card flat class="pa-4 mt-4">
             <v-data-table
@@ -158,19 +140,22 @@
                 <v-card-text>
                   <v-simple-table>
                     <thead>
-                      <tr><th>Dzień</th><th>Godziny pracy</th></tr>
+                    <tr>
+                      <th>Dzień</th>
+                      <th>Godziny pracy</th>
+                    </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="day in days" :key="day">
-                        <td>{{ day }}</td>
-                        <td>
-                          <v-text-field
-                            v-model="selectedDoctor.schedule[day]"
-                            dense
-                            :rules="scheduleRules"
-                          />
-                        </td>
-                      </tr>
+                    <tr v-for="day in days" :key="day">
+                      <td>{{ day }}</td>
+                      <td>
+                        <v-text-field
+                          v-model="selectedDoctor.schedule[day]"
+                          dense
+                          :rules="scheduleRules"
+                        />
+                      </td>
+                    </tr>
                     </tbody>
                   </v-simple-table>
                 </v-card-text>
@@ -185,7 +170,6 @@
         </v-window-item>
       </v-window>
 
-      <!-- Snackbar -->
       <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" bottom>
         {{ snackbarText }}
       </v-snackbar>
@@ -195,34 +179,18 @@
 
 <script>
 import doctorService from '@/services/DoctorService'
+import visitService from '@/services/VisitService.js'
+import {it} from "vuetify/locale";
 
 export default {
   data() {
     return {
       tab: 'add',
-
-      // pickery
-      datePicker: false,
       timePicker: false,
-      minDate: new Date().toISOString().slice(0,10),
-
-      // formularz
-      newAppointment: {
-        doctor: null,
-        office: null,
-        patient: '',
-        date: null,   // YYYY-MM-DD
-        time: '',
-        notes: ''
-      },
-
-      // dane
+      newAppointment: { doctor: null, patient: '', date: null, time: '', notes: '' },
       doctors: [],
       appointments: [],
-
-      // walidacja
       doctorRules: [v => !!v || 'Wybierz lekarza'],
-      officeRules: [v => !!v || 'Wybierz gabinet'],
       patientRules: [v => !!v || 'Wprowadź pacjenta'],
       dateRules: [
         v => !!v || 'Wpisz datę',
@@ -233,18 +201,11 @@ export default {
         v => /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/.test(v) || 'Format HH:mm'
       ],
       scheduleRules: [
-        v => !v || /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v)
-              || 'Format HH:MM-HH:MM'
+        v => !v || /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v) || 'Format HH:MM-HH:MM'
       ],
-
-      // grafik
-      days: ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'],
-      offices: ['Gabinet 1','Gabinet 2','Gabinet 3','Gabinet 4'],
-      loadingDoctors: false,
+      days: ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'],
       scheduleDialog: false,
-      selectedDoctor: { id:null, fullName:'', licenseNumber:'', schedule:{} },
-
-      // snackbar
+      selectedDoctor: { id: null, fullName: '', schedule: {} },
       snackbar: false,
       snackbarText: '',
       snackbarColor: 'success'
@@ -253,26 +214,24 @@ export default {
   computed: {
     appointmentHeaders() {
       return [
-        { text:'Lekarz', value:'doctorName' },
-        { text:'Gabinet', value:'office' },
-        { text:'Pacjent', value:'patient' },
-        { text:'Data', value:'date' },
-        { text:'Godzina', value:'time' },
-        { text:'Uwagi', value:'notes' },
-        { text:'Akcje', value:'actions', sortable:false }
+        { text: 'ID', value: 'id' },
+        { text: 'Lekarz', value: 'doctorName' },
+        { text: 'Pacjent', value: 'patient' },
+        { text: 'Data i godzina', value: 'date' },
+        { text: 'Opis', value: 'description' },
+        { text: 'Akcje', value: 'actions', sortable: false }
       ]
     },
     doctorHeaders() {
       return [
-        { text:'Imię i nazwisko', value:'fullName' },
-        { text:'Numer licencji', value:'licenseNumber' },
-        { text:'Grafik', value:'schedule', sortable:false }
+        { text: 'Imię i nazwisko', value: 'fullName' },
+        { text: 'Grafik', value: 'schedule', sortable: false }
       ]
     },
     formattedDoctors() {
       return this.doctors.map(d => ({
         ...d,
-        fullName: `Dr ${d.firstName} ${d.lastName}`,
+        fullName: `${d.firstName} ${d.lastName}`,
         schedule: this.formatSchedule(d.employeeWorkSchedules)
       }))
     },
@@ -285,105 +244,110 @@ export default {
     this.loadAppointments()
   },
   methods: {
-    dateFormat(date) {
-        if (!date) return ''
-        const day   = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // miesiące liczone od 0
-        const year  = date.getFullYear();
-
-        return `${day}/${month}/${year}`
-    },
-    // formularz
-    addAppointment() {
-      if (!this.$refs.appointmentForm.validate()) {
-        this.notify('Wypełnij wszystkie pola','error')
-        return
-      }
-      if (!this.newAppointment.date) {
-        this.notify('Wybierz datę','error')
-        return
-      }
-      const doc = this.doctors.find(d=>d.id===this.newAppointment.doctor)
-      if (!doc) {
-        this.notify('Nie znaleziono lekarza','error')
-        return
-      }
-      this.appointments.push({
-        id: this.appointments.length+1,
-        doctorName: doc.fullName,
-        office: this.newAppointment.office,
-        patient: this.newAppointment.patient,
-        date: this.newAppointment.date,
-        time: this.newAppointment.time,
-        notes: this.newAppointment.notes
-      })
-      this.notify('Wizyta dodana!','success')
-      this.resetForm()
-    },
-    resetForm() {
-      this.newAppointment = { doctor:null, office:null, patient:'', date:null, time:'', notes:'' }
-      this.$refs.appointmentForm.resetValidation()
-    },
-    // CRUD wizyt
-    editAppointment(item) { this.notify(`Edycja: ${item.patient}`,'info') },
-    deleteAppointment(item) {
-      this.appointments = this.appointments.filter(a=>a.id!==item.id)
-      this.notify('Wizyta usunięta','success')
-    },
-    // grafik
-    editSchedule(d) {
-      this.selectedDoctor = { id:d.id, fullName:d.fullName, licenseNumber:d.licenseNumber, schedule:{...d.schedule} }
-      this.scheduleDialog = true
-    },
-    saveSchedule() {
-      const idx = this.doctors.findIndex(d=>d.id===this.selectedDoctor.id)
-      if (idx!==-1) this.doctors[idx].employeeWorkSchedules = this.convertScheduleToDto(this.selectedDoctor.schedule)
-      this.scheduleDialog = false
-      this.notify('Grafik zapisany','success')
-    },
-    convertScheduleToDto(schedule) {
-      return Object.entries(schedule)
-        .map(([day,h])=> h&&h.includes('-') ? { dayOfWeek:day, startTime:h.split('-')[0], endTime:h.split('-')[1] } : null)
-        .filter(x=>x)
-    },
-    formatSchedule(ws) {
-      const sched = {}
-      this.days.forEach(day=> {
-        const e = ws?.find(w=>w.dayOfWeek===day)
-        sched[day] = e ? `${e.startTime}-${e.endTime}` : 'Nieczynne'
-      })
-      return sched
-    },
-    // dane
     async loadDoctors() {
-      this.loadingDoctors = true
       try {
         const res = await doctorService.getDoctorsFullNames()
         this.doctors = res.data
       } catch {
-        this.notify('Błąd ładowania lekarzy','error')
-      } finally {
-        this.loadingDoctors = false
+        this.notify('Błąd ładowania lekarzy', 'error')
       }
     },
     async loadAppointments() {
-      this.appointments = [
-        { id:1, doctorName:'Dr Jan Kowalski', office:'Gabinet 1', patient:'Adam Nowak', date:'2023-06-15', time:'10:00', notes:'Kontrolna' }
-      ]
+      try {
+        const res = await visitService.getVisits()
+        this.appointments = res.data.map(item => ({
+          ...item,
+          date: this.formatDateTime(item.date)
+        }))
+      } catch {
+        this.notify('Błąd ładowania wizyt', 'error')
+      }
     },
-    // pomocnicze
-    notify(text,color) {
+
+    async addAppointment() {
+      try {
+        const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
+        const visitDto = {
+          doctorName: this.newAppointment.doctor,
+          patient: this.newAppointment.patient,
+          date: dateTime,
+          description: this.newAppointment.notes
+        }
+        await visitService.addVisit(visitDto)
+        this.notify('Wizyta dodana pomyślnie!', 'success')
+        this.resetForm()
+        this.loadAppointments()
+      } catch (error) {
+        this.notify('Błąd podczas dodawania wizyty: ' + (error.response?.data?.message || error.message), 'error')
+      }
+    },
+
+    dateFormat(date) {
+      if (!date) return ''
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
+    },
+
+    formatDateForBackend(date) {
+      if (!date) return ''
+      if (date instanceof Date) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+      if (typeof date === 'string' && date.includes('/')) {
+        const [day, month, year] = date.split('/')
+        return `${year}-${month}-${day}`
+      }
+      return date
+    },
+
+    resetForm() {
+      this.newAppointment = { doctor: null, patient: '', date: null, time: '', notes: '' }
+      this.$refs.appointmentForm.resetValidation()
+    },
+
+    editAppointment(item) {
+      this.notify(`Edycja: ${item.patient}`, 'info')
+    },
+
+    async deleteAppointment(item) {
+      try {
+        await visitService.delete(item.id)
+        this.notify('Wizyta usunięta', 'success')
+        await this.loadAppointments()
+      } catch (error) {
+        console.error('Błąd usuwania wizyty:', error)
+        this.notify('Nie udało się usunąć wizyty', 'error')
+      }
+    },
+
+    notify(text, color) {
       this.snackbarText = text
       this.snackbarColor = color
       this.snackbar = true
     },
-    logout() {
-      this.$router.push('/login')
+
+    formatDateTime(dateTimeString) {
+      if (!dateTimeString) return ''
+      const date = new Date(dateTimeString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${day}/${month}/${year} ${hours}:${minutes}`
     }
   }
 }
+
 </script>
 
 <style scoped>
-.v-toolbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.v-toolbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 </style>

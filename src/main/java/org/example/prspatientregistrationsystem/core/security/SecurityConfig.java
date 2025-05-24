@@ -65,7 +65,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(Customizer.withDefaults()) // Dodaj to
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(httpForm -> {
                     httpForm.loginPage("/login").permitAll();
@@ -81,7 +81,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(registry -> {
                     registry.requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll();
-                    registry.anyRequest().authenticated();
+                    registry.anyRequest().permitAll();
                 })
                 .build();
     }
