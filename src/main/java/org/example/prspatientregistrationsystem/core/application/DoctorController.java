@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorDto;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorService;
 import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorAddCommand;
+import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorUpdateCommand;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class DoctorController {
         doctorService.add(command);
     }
 
-    @PostMapping
+    @PostMapping(path = "update")
     public void update(@RequestBody DoctorUpdateCommand command) {
         doctorService.update(command);
     }

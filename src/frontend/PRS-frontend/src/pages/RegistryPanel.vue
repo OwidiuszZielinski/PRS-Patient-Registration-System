@@ -607,6 +607,7 @@ export default {
             licenseNumber: d.licenseNumber,
             fullName: `${d.firstName} ${d.lastName}`
           }))
+          .sort((a, b) => a.id - b.id)
         } catch (e) {
           this.notify('Błąd ładowania lekarzy', 'error')
         }
@@ -643,12 +644,14 @@ export default {
         this.notify('Doctor registered successfully!', 'success');
         this.resetDoctorForm();
         this.loadDoctorsFullName();
+        this.loadDoctors();
       } catch (error) {
         this.notify('Error registering doctor: ' + (error.response?.data?.message || error.message), 'error');
       }
     },
 editDoctor(item) {
     this.editedDoctor = {
+      id:            item.id,
       firstName:     item.firstName,
       lastName:      item.lastName,
       licenseNumber: item.licenseNumber,
@@ -660,7 +663,7 @@ editDoctor(item) {
   async updateDoctor() {
     try {
       const dto = {
-        doctorId:     this.editedDoctor.id,
+        id:     this.editedDoctor.id,
         firstName:    this.editedDoctor.firstName,
         lastName:     this.editedDoctor.lastName,
         licenseNumber:this.editedDoctor.licenseNumber,
@@ -674,6 +677,17 @@ editDoctor(item) {
       this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error');
     }
   },
+
+  async deleteDoctor(item) {
+        try {
+          await doctorService.delete(item.id)
+          this.notify('Doctor removed', 'success')
+          await this.loadDoctors()
+        } catch (error) {
+          console.error('Error deleting doctor:', error)
+          this.notify('Error deleting doctor', 'error')
+        }
+      },
     async addAppointment() {
       try {
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`

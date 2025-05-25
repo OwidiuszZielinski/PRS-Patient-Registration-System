@@ -14,5 +14,8 @@ export default {
   },
   updateDoctor(doctorDto) {
     return axios.post(BASE_URL + "update", doctorDto)
-  }
+  },
+  delete(id) {
+      return axios.delete(`${BASE_URL}${id}/`)
+    }
 }

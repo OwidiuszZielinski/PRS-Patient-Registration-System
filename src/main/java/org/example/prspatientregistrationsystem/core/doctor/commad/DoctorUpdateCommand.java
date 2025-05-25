@@ -1,9 +1,10 @@
 package org.example.prspatientregistrationsystem.core.doctor.commad;
 
-public class DoctorUpdateCommand {
-  private Long id;
-  private Long officeId;
-  private String firstName;
-  private String lastName;
-  private String licenseNumber;
+public record DoctorUpdateCommand(
+    Long id,
+    Long officeId,
+    String firstName,
+    String lastName,
+    String licenseNumber
+) {
 }
