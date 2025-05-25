@@ -29,4 +29,9 @@ public class VisitController {
     public void delete(@PathVariable Long id) {
         visitService.delete(id);
     }
+
+    @PostMapping(path = "update")
+    public void update(@RequestBody VisitDto visitDto) {
+        visitService.update(visitDto);
+    }
 }

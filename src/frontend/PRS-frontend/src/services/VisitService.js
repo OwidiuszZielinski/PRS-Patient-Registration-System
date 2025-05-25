@@ -11,5 +11,8 @@ export default {
   },
   delete(id) {
     return axios.delete(`${BASE_URL}${id}/`)
-  }
+  },
+  update(visitDto) {
+   return axios.post(`${BASE_URL}update`, visitDto);
+ }
 }

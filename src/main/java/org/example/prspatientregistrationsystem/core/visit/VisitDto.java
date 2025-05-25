@@ -23,4 +23,14 @@ public class VisitDto {
                 visitDto.description
         );
     }
+
+    public static VisitDto mapToVisitDto(VisitEntity visitEntity) {
+        return VisitDto.builder()
+            .id(visitEntity.getId())
+            .date(visitEntity.getDate())
+            .doctorName(visitEntity.getDoctorName())
+            .patient(visitEntity.getPatient())
+            .description(visitEntity.getDescription())
+            .build();
+    }
 }
