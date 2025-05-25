@@ -19,21 +19,6 @@ public class DoctorService {
 
     public void add(DoctorAddCommand command) {
         doctorRepository.save(buildDoctorToSave(command));
-
-    //  TODO to ustawimy w grafikach
-
-//        var doctorScheduleToSave = command.doctorSchedules()
-//            .stream()
-//            .map(schedule -> DoctorSchedule.builder()
-//                .doctor(saved)
-//                .scheduleDate(schedule.scheduleDate())
-//                .isWorkingDay(schedule.isWorkingDay())
-//                .isVacation(schedule.isVacation())
-//                .startTime(schedule.startTime())
-//                .endTime(schedule.endTime())
-//                .build()
-//            ).toList();
-//        saveWorkSchedule(doctorScheduleToSave);
     }
 
     public List<DoctorDto> findAll() {

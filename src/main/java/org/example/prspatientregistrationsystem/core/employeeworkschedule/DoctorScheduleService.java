@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -67,6 +68,13 @@ public class DoctorScheduleService {
         saveAll(schedulesToSave);
     }
 
+    public void fillAllDoctorSchedules() {
+        doctorRepository.findAll()
+                .stream()
+                .map(Doctor::getDoctorId)
+                .forEach(this::autoFillSchedule);
+    }
+
     public void autoFillSchedule(Long doctorId) {
         var doctor = findDoctor(doctorId);
         var currentDate = LocalDate.now();
@@ -104,5 +112,19 @@ public class DoctorScheduleService {
     @Transactional
     public void clearByDoctorId(Long doctorId) {
         doctorScheduleRepo.deleteDoctorScheduleByDoctor_DoctorId(doctorId);
+    }
+
+    public List<ScheduleDto> findByDoctorId(Long doctorId) {
+        return doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new NoSuchElementException("Doctor not found"))
+                .getDoctorSchedules()
+                .stream()
+                .map(it -> new ScheduleDto(it.getScheduleDate(), it.getStartTime(), it.getEndTime()))
+                .toList();
+    }
+
+    @Transactional
+    public void deleteSchedule(Long doctorId, ScheduleDto scheduleDto) {
+        doctorScheduleRepo.deleteByDoctor_DoctorIdAndScheduleDate(doctorId, scheduleDto.scheduleDate());
     }
 }

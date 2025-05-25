@@ -4,16 +4,33 @@
       <v-row justify="center">
         <v-col cols="12" md="10" lg="8">
           <v-card class="elevation-12 pa-4">
-            <!-- Przycisk pełnego ekranu na karcie -->
-            <v-card-actions class="justify-end pa-0 ma-0">
-              <v-btn
-                icon
-                small
-                @click="toggleFullscreen"
-                class="ma-0"
-              >
+            <!-- Pełny ekran + wybór gabinetu + przycisk generowania numeru -->
+            <v-card-actions class="justify-between pa-0 ma-0">
+              <v-btn icon small @click="toggleFullscreen">
                 <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
               </v-btn>
+              <div class="d-flex align-center">
+                <v-menu>
+                  <template #activator="{ props }">
+                    <v-btn v-bind="props" outlined class="mr-2">
+                      Office: {{ ticketOffice }}
+                      <v-icon right>mdi-menu-down</v-icon>
+                    </v-btn>
+                  </template>
+                  <v-list>
+                    <v-list-item
+                      v-for="office in offices"
+                      :key="office"
+                      @click="ticketOffice = office"
+                    >
+                      <v-list-item-title>Office {{ office }}</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+                <v-btn color="primary" @click="generateTicket">
+                  <v-icon left>mdi-ticket</v-icon> Take ticket
+                </v-btn>
+              </div>
             </v-card-actions>
 
             <v-card-title class="text-center text-h4 font-weight-bold mb-4">
@@ -21,7 +38,7 @@
               System kolejkowy
             </v-card-title>
 
-            <!-- Aktualnie obsługiwany - uproszczony -->
+            <!-- Aktualnie obsługiwany -->
             <v-card outlined class="mb-6 current-card">
               <v-card-text class="pa-4 text-center">
                 <div class="text-h6 mb-2">Aktualnie obsługiwany:</div>
@@ -32,26 +49,24 @@
               </v-card-text>
             </v-card>
 
-            <!-- Kolejka oczekujących - uproszczona -->
+            <!-- Kolejka oczekujących -->
             <v-card outlined>
               <v-card-text class="pa-4">
                 <v-row>
                   <v-col
                     v-for="ticket in waitingTickets"
                     :key="ticket.number"
-                    cols="12" sm="6" md="4"
+                    cols="12"
+                    sm="6"
+                    md="4"
                   >
                     <v-card class="ticket-card">
                       <v-card-text class="text-center">
                         <v-chip color="secondary" class="mb-2">
                           <span class="text-h5">{{ ticket.number }}</span>
                         </v-chip>
-                        <div class="text-subtitle-1">
-                          Gabinet {{ ticket.office }}
-                        </div>
-                        <div class="text-caption mt-1">
-                          ~{{ ticket.waitTime }} min
-                        </div>
+                        <div class="text-subtitle-1">Gabinet {{ ticket.office }}</div>
+                        <div class="text-caption mt-1">~{{ ticket.waitTime }} min</div>
                       </v-card-text>
                     </v-card>
                   </v-col>
@@ -84,74 +99,58 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { store, avgWaitTime } from '@/store'
 
-// Dane
-const currentTicket = ref({
-  number: "A102",
-  office: "1"
-});
-
-const waitingTickets = ref([
-  { number: "A103", office: "1", waitTime: 5 },
-  { number: "B201", office: "2", waitTime: 15 },
-  { number: "C305", office: "3", waitTime: 25 },
-  { number: "A104", office: "1", waitTime: 35 },
-  { number: "B202", office: "2", waitTime: 45 },
-  { number: "D401", office: "4", waitTime: 55 }
-]);
-
-// Tryb pełnoekranowy
-const fullscreen = ref(false);
+const fullscreen = ref(false)
 
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      console.error(`Error attempting to enable fullscreen: ${err.message}`);
-    });
-    fullscreen.value = true;
+    document.documentElement.requestFullscreen()
+      .then(() => { fullscreen.value = true })
+      .catch(err => console.error('Fullscreen error:', err))
   } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-      fullscreen.value = false;
-    }
+    document.exitFullscreen()
+      .then(() => { fullscreen.value = false })
+      .catch(err => console.error('Exit fullscreen error:', err))
   }
-};
+}
 
 const handleFullscreenChange = () => {
-  fullscreen.value = !!document.fullscreenElement;
-};
+  fullscreen.value = !!document.fullscreenElement
+}
 
-onMounted(() => {
-  document.addEventListener('fullscreenchange', handleFullscreenChange);
-});
+onMounted(() => document.addEventListener('fullscreenchange', handleFullscreenChange))
+onBeforeUnmount(() => document.removeEventListener('fullscreenchange', handleFullscreenChange))
 
-onBeforeUnmount(() => {
-  document.removeEventListener('fullscreenchange', handleFullscreenChange);
-});
+const offices = store.offices
+const waitingTickets = computed(() => store.queue)
+const currentTicket = computed(() => store.currentVisit || { number: '-', office: '-' })
+const avgWait = avgWaitTime
 
-// Oblicz średni czas oczekiwania
-const avgWaitTime = computed(() => {
-  const sum = waitingTickets.value.reduce((acc, ticket) => acc + ticket.waitTime, 0);
-  return Math.round(sum / waitingTickets.value.length);
-});
+const ticketOffice = ref(store.offices[0])
+
+function generateTicket() {
+  const letters = 'ABCD'
+  const num = letters[Math.floor(Math.random() * letters.length)] +
+    Math.floor(100 + Math.random() * 900)
+  const wait = store.queue.filter(t => t.office === ticketOffice.value).length * 5 + 5
+  store.queue.push({ number: num, office: ticketOffice.value, waitTime: wait })
+}
 </script>
 
 <style scoped>
 .current-card {
   border-left: 6px solid var(--v-primary-base);
 }
-
 .ticket-card {
   border-left: 4px solid var(--v-secondary-base);
   transition: all 0.3s ease;
 }
-
 .ticket-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 .v-btn {
   transition: all 0.3s ease;
 }

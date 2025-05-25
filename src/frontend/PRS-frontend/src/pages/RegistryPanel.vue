@@ -247,57 +247,9 @@
                       </v-card>
 
           </v-card>
-
         </v-window-item>
-
-
-        <!-- Doctor Schedules -->
         <v-window-item value="schedule">
-          <v-card flat class="pa-4 mt-4">
-            <v-data-table
-              :headers="doctorHeaders"
-              :items="formattedDoctors"
-              :items-per-page="5"
-              class="elevation-1"
-            >
-              <template v-slot:item.schedule="{ item }">
-                <v-btn small @click="editSchedule(item)">Edytuj grafik</v-btn>
-              </template>
-            </v-data-table>
-
-            <v-dialog v-model="scheduleDialog" max-width="600">
-              <v-card>
-                <v-card-title>Edycja grafiku dla {{ selectedDoctor.fullName }}</v-card-title>
-                <v-card-text>
-                  <v-simple-table>
-                    <thead>
-                    <tr>
-                      <th>Dzień</th>
-                      <th>Godziny pracy</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="day in days" :key="day">
-                      <td>{{ day }}</td>
-                      <td>
-                        <v-text-field
-                          v-model="selectedDoctor.schedule[day]"
-                          dense
-                          :rules="scheduleRules"
-                        />
-                      </td>
-                    </tr>
-                    </tbody>
-                  </v-simple-table>
-                </v-card-text>
-                <v-card-actions>
-                  <v-spacer/>
-                  <v-btn text @click="scheduleDialog = false">Anuluj</v-btn>
-                  <v-btn text @click="saveSchedule">Zapisz</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </v-card>
+          <DoctorManagement :doctorsToEdit="doctorsToEdit" />
         </v-window-item>
       </v-window>
 
@@ -448,8 +400,11 @@
 <script>
 import doctorService from '@/services/DoctorService'
 import visitService from '@/services/VisitService.js'
+import DoctorSchedules from "@/components/DoctorSchedules.vue";
+import DoctorManagement from "@/components/DoctorSchedules.vue";
 
 export default {
+  components: {DoctorManagement, DoctorSchedules},
   data() {
     return {
       tab: 'patient',
@@ -533,7 +488,7 @@ export default {
       },
       snackbar: false,
       snackbarText: '',
-      snackbarColor: 'success'
+      snackbarColor: 'success',
     }
   },
    computed: {
@@ -816,38 +771,6 @@ editDoctor(item) {
       return `${day}/${month}/${year} ${hours}:${minutes}`
     },
 
-    formatSchedule(schedules) {
-      if (!schedules) return 'Brak danych'
-      return schedules.map(s => `${s.day}: ${s.startTime}-${s.endTime}`).join(', ')
-    },
-
-    editSchedule(doctor) {
-      this.selectedDoctor = {
-        id: doctor.id,
-        fullName: doctor.fullName,
-        schedule: this.initializeSchedule(doctor)
-      };
-      this.scheduleDialog = true;
-    },
-
-    initializeSchedule(doctor) {
-      const schedule = {};
-      this.days.forEach(day => {
-        schedule[day] = '';
-      });
-      // Można dodać logikę wypełniania istniejącym grafikiem
-      return schedule;
-    },
-
-    async saveSchedule() {
-      try {
-        // Tutaj logika zapisywania grafiku
-        this.notify('Grafik zaktualizowany', 'success');
-        this.scheduleDialog = false;
-      } catch (error) {
-        this.notify('Błąd podczas zapisywania grafiku', 'error');
-      }
-    }
   }
 }
 </script>

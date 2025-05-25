@@ -51,7 +51,7 @@ export default {
 
 <style scoped>
 .custom-title {
-  color: #764ABC; /* Ten sam fiolet co ikona */
+  color: #764ABC;
   font-size: 1.5rem;
   letter-spacing: 1px;
 }
