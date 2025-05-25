@@ -36,6 +36,11 @@ public class DoctorController {
         doctorService.add(command);
     }
 
+    @PostMapping
+    public void update(@RequestBody DoctorUpdateCommand command) {
+        doctorService.update(command);
+    }
+
     @DeleteMapping(path = "/{id}/")
     public void delete(@PathVariable Long id) {
         doctorService.delete(id);

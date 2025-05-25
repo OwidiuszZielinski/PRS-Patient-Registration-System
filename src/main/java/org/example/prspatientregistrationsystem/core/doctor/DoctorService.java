@@ -17,23 +17,22 @@ public class DoctorService {
     private final DoctorScheduleService doctorScheduleService;
 
     public void add(DoctorAddCommand command) {
-        var doctorToSave = buildDoctorToSave(command);
-        var saved = doctorRepository.save(doctorToSave);
+        doctorRepository.save(buildDoctorToSave(command));
 
-        var doctorScheduleToSave = command.doctorSchedules()
-                .stream()
-                .map(schedule -> DoctorSchedule.builder()
-                        .doctor(saved)
-                        .scheduleDate(schedule.scheduleDate())
-                        .isWorkingDay(schedule.isWorkingDay())
-                        .isVacation(schedule.isVacation())
-                        .startTime(schedule.startTime())
-                        .endTime(schedule.endTime())
-                        .build()
-                ).toList();
+    //  TODO to ustawimy w grafikach
 
-        doctorRepository.save(doctorToSave);
-        saveWorkSchedule(doctorScheduleToSave);
+//        var doctorScheduleToSave = command.doctorSchedules()
+//            .stream()
+//            .map(schedule -> DoctorSchedule.builder()
+//                .doctor(saved)
+//                .scheduleDate(schedule.scheduleDate())
+//                .isWorkingDay(schedule.isWorkingDay())
+//                .isVacation(schedule.isVacation())
+//                .startTime(schedule.startTime())
+//                .endTime(schedule.endTime())
+//                .build()
+//            ).toList();
+//        saveWorkSchedule(doctorScheduleToSave);
     }
 
     public List<DoctorDto> findAll() {

@@ -8,5 +8,11 @@ export default {
   },
   getDoctorsFullNames() {
     return axios.get(BASE_URL + "fullname");
+  },
+  addDoctor(doctorDto) {
+    return axios.post(BASE_URL, doctorDto)
+  },
+  updateDoctor(doctorDto) {
+    return axios.post(BASE_URL + "update", doctorDto)
   }
 }

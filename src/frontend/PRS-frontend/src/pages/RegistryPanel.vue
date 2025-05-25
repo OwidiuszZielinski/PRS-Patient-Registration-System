@@ -218,7 +218,7 @@
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field
-                    v-model="newDoctor.roomNumber"
+                    v-model="newDoctor.officeId"
                     label="Room Number"
                     :rules="roomRules"
                     required
@@ -231,8 +231,25 @@
                 </v-col>
               </v-row>
             </v-form>
+
+                      <v-card flat class="pa-4 mt-4">
+                        <v-data-table
+                          :headers="doctorHeaders"
+                          :items="doctorsToEdit"
+                          :items-per-page="10"
+                          class="elevation-1"
+                        >
+                  <template v-slot:item.actions="{ item }">
+                <v-icon small class="mr-2" @click="editDoctor(item)">mdi-pencil</v-icon>
+                <v-icon small @click="deleteDoctor(item)">mdi-delete</v-icon>
+              </template>
+                        </v-data-table>
+                      </v-card>
+
           </v-card>
+
         </v-window-item>
+
 
         <!-- Doctor Schedules -->
         <v-window-item value="schedule">
@@ -371,6 +388,56 @@
         </v-card>
       </v-dialog>
 
+      <!-- Dialog edycji lekarza -->
+      <v-dialog v-model="editDoctorDialog" max-width="500">
+        <v-card>
+          <v-card-title>Edit Doctor</v-card-title>
+          <v-card-text>
+            <v-form ref="editDoctorForm">
+              <v-row>
+                <v-col cols="12" md="6">
+                  <label class="text-caption text--secondary">First Name</label>
+                  <div class="pa-2 grey lighten-4 rounded">
+                    {{ editedDoctor.firstName }}
+                  </div>
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="editedDoctor.lastName"
+                    label="Last Name"
+                    :rules="nameRules"
+                    required
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="editedDoctor.licenseNumber"
+                    label="License Number"
+                    :rules="licenseRules"
+                    required
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="editedDoctor.officeId"
+                    label="Office ID"
+                    :rules="roomRules"
+                    required
+                    type="number"
+                  />
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer/>
+            <v-btn text @click="editDoctorDialog = false">Cancel</v-btn>
+            <v-btn color="primary" @click="updateDoctor">Save</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" bottom>
         {{ snackbarText }}
       </v-snackbar>
@@ -401,10 +468,12 @@ export default {
         firstName: '',
         lastName: '',
         licenseNumber: '',
-        roomNumber: null
+        officeId: null
       },
       doctors: [],
-      appointments: [],
+      doctorsToEdit: [],
+      appointments: [
+      ],
       doctorRules: [v => !!v || 'Wybierz lekarza'],
       patientRules: [v => !!v || 'Wprowadź pacjenta'],
       nameRules: [
@@ -445,6 +514,14 @@ export default {
       days: ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'],
       scheduleDialog: false,
       selectedDoctor: { id: null, fullName: '', schedule: {} },
+      editDoctorDialog: false,
+          editedDoctor: {
+            id: null,
+            firstName: '',
+            lastName: '',
+            licenseNumber: '',
+            officeId: null
+          },
       editDialog: false,
       editedAppointment: {
         id: null,
@@ -459,23 +536,28 @@ export default {
       snackbarColor: 'success'
     }
   },
-  computed: {
-    appointmentHeaders() {
-      return [
-        { text: 'ID', value: 'id' },
-        { text: 'Lekarz', value: 'doctorName' },
-        { text: 'Pacjent', value: 'patient' },
-        { text: 'Data i godzina', value: 'date' },
-        { text: 'Opis', value: 'description' },
-        { text: 'Akcje', value: 'actions', sortable: false }
-      ]
-    },
-    doctorHeaders() {
-      return [
-        { text: 'Imię i nazwisko', value: 'fullName' },
-        { text: 'Grafik', value: 'schedule', sortable: false }
-      ]
-    },
+   computed: {
+      appointmentHeaders() {
+         return [
+           { title: 'ID',           key: 'id',           align: 'start', sortable: true },
+           { title: 'Doctor',       key: 'doctorName',   align: 'start', sortable: true },
+           { title: 'Patient',      key: 'patient',      align: 'start', sortable: true },
+           { title: 'Date',         key: 'date',         align: 'start', sortable: true },
+           { title: 'Description',         key: 'description',  align: 'start', sortable: true },
+           { title: 'Actions',        key: 'actions',      align: 'end',   sortable: false }
+         ]
+       },
+       doctorHeaders() {
+          return [
+               { title: 'Doctor ID',      key: 'id',            align: 'start', sortable: true },
+               { title: 'First Name',     key: 'firstName',     align: 'start', sortable: true },
+               { title: 'Last Name',      key: 'lastName',      align: 'start', sortable: true },
+               { title: 'License Number', key: 'licenseNumber', align: 'start', sortable: true },
+               { title: 'Office ID',      key: 'officeId',      align: 'start', sortable: true },
+               { title: 'Actions',        key: 'actions',      align: 'end',   sortable: false }
+             ]
+       },
+
     formattedDoctors() {
       return this.doctors.map(d => ({
         ...d,
@@ -488,11 +570,12 @@ export default {
     }
   },
   created() {
-    this.loadDoctors()
+    this.loadDoctorsFullName()
     this.loadAppointments()
+    this.loadDoctors()
   },
   methods: {
-    async loadDoctors() {
+    async loadDoctorsFullName() {
       try {
         const res = await doctorService.getDoctorsFullNames()
         this.doctors = res.data
@@ -512,6 +595,22 @@ export default {
         this.notify('Błąd ładowania wizyt', 'error')
       }
     },
+    async loadDoctors() {
+        try {
+          const res = await doctorService.getDoctors()
+
+          this.doctorsToEdit = res.data.map(d => ({
+            id: d.id,
+            officeId: d.officeId,
+            firstName: d.firstName,
+            lastName: d.lastName,
+            licenseNumber: d.licenseNumber,
+            fullName: `${d.firstName} ${d.lastName}`
+          }))
+        } catch (e) {
+          this.notify('Błąd ładowania lekarzy', 'error')
+        }
+      },
 
     async addPatient() {
       try {
@@ -534,22 +633,47 @@ export default {
 
     async addDoctor() {
       try {
-        // TODO: Uncomment when service is ready
-        // const doctorDto = {
-        //   firstName: this.newDoctor.firstName,
-        //   lastName: this.newDoctor.lastName,
-        //   licenseNumber: this.newDoctor.licenseNumber,
-        //   roomNumber: this.newDoctor.roomNumber
-        // };
-        // await doctorService.addDoctor(doctorDto);
+        const doctorDto = {
+          firstName: this.newDoctor.firstName,
+          lastName: this.newDoctor.lastName,
+          licenseNumber: this.newDoctor.licenseNumber,
+          officeId: this.newDoctor.officeId
+        };
+        await doctorService.addDoctor(doctorDto);
         this.notify('Doctor registered successfully!', 'success');
         this.resetDoctorForm();
-        this.loadDoctors();
+        this.loadDoctorsFullName();
       } catch (error) {
         this.notify('Error registering doctor: ' + (error.response?.data?.message || error.message), 'error');
       }
     },
+editDoctor(item) {
+    this.editedDoctor = {
+      firstName:     item.firstName,
+      lastName:      item.lastName,
+      licenseNumber: item.licenseNumber,
+      officeId:      item.officeId
+    };
+    this.editDoctorDialog = true;
+  },
 
+  async updateDoctor() {
+    try {
+      const dto = {
+        doctorId:     this.editedDoctor.id,
+        firstName:    this.editedDoctor.firstName,
+        lastName:     this.editedDoctor.lastName,
+        licenseNumber:this.editedDoctor.licenseNumber,
+        officeId:     this.editedDoctor.officeId
+      };
+      await doctorService.updateDoctor(dto);
+      this.notify('Doctor updated successfully!', 'success');
+      this.editDoctorDialog = false;
+      this.loadDoctors();
+    } catch (error) {
+      this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  },
     async addAppointment() {
       try {
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
@@ -713,9 +837,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.v-toolbar {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-</style>
