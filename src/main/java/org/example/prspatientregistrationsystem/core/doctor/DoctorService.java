@@ -2,6 +2,7 @@ package org.example.prspatientregistrationsystem.core.doctor;
 
 import lombok.RequiredArgsConstructor;
 import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorAddCommand;
+import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorUpdateCommand;
 import org.example.prspatientregistrationsystem.core.employeeworkschedule.DoctorSchedule;
 import org.example.prspatientregistrationsystem.core.employeeworkschedule.DoctorScheduleService;
 import org.springframework.stereotype.Service;
@@ -17,23 +18,7 @@ public class DoctorService {
     private final DoctorScheduleService doctorScheduleService;
 
     public void add(DoctorAddCommand command) {
-        var doctorToSave = buildDoctorToSave(command);
-        var saved = doctorRepository.save(doctorToSave);
-
-        var doctorScheduleToSave = command.doctorSchedules()
-                .stream()
-                .map(schedule -> DoctorSchedule.builder()
-                        .doctor(saved)
-                        .scheduleDate(schedule.scheduleDate())
-                        .isWorkingDay(schedule.isWorkingDay())
-                        .isVacation(schedule.isVacation())
-                        .startTime(schedule.startTime())
-                        .endTime(schedule.endTime())
-                        .build()
-                ).toList();
-
-        doctorRepository.save(doctorToSave);
-        saveWorkSchedule(doctorScheduleToSave);
+        doctorRepository.save(buildDoctorToSave(command));
     }
 
     public List<DoctorDto> findAll() {
@@ -58,9 +43,6 @@ public class DoctorService {
         doctorRepository.deleteById(id);
     }
 
-    private void saveWorkSchedule(List<DoctorSchedule> doctorSchedules) {
-        doctorSchedules.forEach(doctorScheduleService::add);
-    }
 
     private static Doctor buildDoctorToSave(DoctorAddCommand command) {
         return Doctor.builder()
@@ -69,6 +51,16 @@ public class DoctorService {
                 .lastName(command.lastName())
                 .licenseNumber(command.licenseNumber())
                 .build();
+    }
+
+    public void update(DoctorUpdateCommand command) {
+        var toUpdate = doctorRepository.findById(command.id())
+            .orElseThrow(() -> new NoSuchElementException("Doctor with id %d not found".formatted(command.id())));
+        toUpdate.setLastName(command.lastName());
+        toUpdate.setOfficeId(command.officeId());
+        toUpdate.setLicenseNumber(command.licenseNumber());
+
+        doctorRepository.save(toUpdate);
     }
 }
 

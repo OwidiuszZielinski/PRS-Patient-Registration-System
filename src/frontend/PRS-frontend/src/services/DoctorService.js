@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api/doctors/";
+const BASE_URL = "http://localhost:8080/api/doctor/";
 
 export default {
   getDoctors() {
@@ -8,5 +8,14 @@ export default {
   },
   getDoctorsFullNames() {
     return axios.get(BASE_URL + "fullname");
-  }
+  },
+  addDoctor(doctorDto) {
+    return axios.post(BASE_URL, doctorDto)
+  },
+  updateDoctor(doctorDto) {
+    return axios.post(BASE_URL + "update", doctorDto)
+  },
+  delete(id) {
+      return axios.delete(`${BASE_URL}${id}/`)
+    }
 }

@@ -10,9 +10,11 @@
         <span class="custom-title font-weight-bold" style="color: #764ABC;">PRS</span>
       </router-link>
       <v-spacer></v-spacer>
-      <v-btn rounded="lg" text to="/" class="custom-btn">Home</v-btn>
-      <v-btn rounded="lg" text to="/login" class="custom-btn">Login</v-btn>
       <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
+      <v-btn rounded="lg" text to="/registry" class="custom-btn">Registration</v-btn>
+      <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
+      <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+
     </v-app-bar>
 
     <v-main>
@@ -47,19 +49,11 @@ export default {
 }
 </script>
 
-
-
 <style scoped>
 .custom-title {
-  color: #764ABC; /* Ten sam fiolet co ikona */
+  color: #764ABC;
   font-size: 1.5rem;
   letter-spacing: 1px;
-}
-.no-hover::before {
-  display: none;
-}
-.v-btn--active.no-hover::before {
-  display: none !important;
 }
 
 .custom-btn {
@@ -67,10 +61,5 @@ export default {
   font-weight: 500;
   letter-spacing: 0.5px;
   margin: 0 4px;
-}
-
-.v-app-bar {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 0 16px;
 }
 </style>

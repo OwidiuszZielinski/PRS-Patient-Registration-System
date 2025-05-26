@@ -4,13 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorDto;
 import org.example.prspatientregistrationsystem.core.doctor.DoctorService;
 import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorAddCommand;
+import org.example.prspatientregistrationsystem.core.doctor.commad.DoctorUpdateCommand;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/doctors/")
+@RequestMapping("/api/doctor/")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DoctorController {
 
@@ -34,6 +35,11 @@ public class DoctorController {
     @PostMapping
     public void add(@RequestBody DoctorAddCommand command) {
         doctorService.add(command);
+    }
+
+    @PostMapping(path = "update")
+    public void update(@RequestBody DoctorUpdateCommand command) {
+        doctorService.update(command);
     }
 
     @DeleteMapping(path = "/{id}/")

@@ -1,26 +1,14 @@
--- Dodawanie 10 lekarzy
-INSERT INTO doctor (first_name, last_name, license_number)
-VALUES ('Jan', 'Kowalski', 'DOC123456'),
-       ('Anna', 'Nowak', 'DOC654321'),
-       ('Piotr', 'Wiśniewski', 'DOC987654'),
-       ('Maria', 'Wójcik', 'DOC456789'),
-       ('Andrzej', 'Kowalczyk', 'DOC321654'),
-       ('Katarzyna', 'Kamińska', 'DOC789456'),
-       ('Tomasz', 'Lewandowski', 'DOC654987'),
-       ('Barbara', 'Dąbrowska', 'DOC321987'),
-       ('Marcin', 'Zieliński', 'DOC987321'),
-       ('Ewa', 'Szymańska', 'DOC456123');
+INSERT INTO doctor (first_name, office_id, last_name, license_number)
+VALUES ('Jan', 1,  'Kowalski', 'DOC123456'),
+       ('Anna', 2, 'Nowak', 'DOC654321'),
+       ('Piotr', 3, 'Wiśniewski', 'DOC987654'),
+       ('Maria', 4, 'Wójcik', 'DOC456789'),
+       ('Andrzej', 5, 'Kowalczyk', 'DOC321654'),
+       ('Andrzej', 5, 'Kowalczyk', 'DOC321654');
 
--- Dodawanie grafików pracy dla każdego lekarza na każdy dzień tygodnia
--- Każdy lekarz ma różne godziny pracy w zależności od dnia tygodnia
---
---INSERT INTO employee_work_schedule (doctor_id, schedule_date, is_working_day, is_vacation, start_time, end_time)
---VALUES (1, '2024-05-01', true, false, '08:00:00', '16:00:00');
---
----- Dzień urlopu
---INSERT INTO employee_work_schedule (doctor_id, schedule_date, is_working_day, is_vacation, start_time, end_time)
---VALUES (1, '2024-05-02', false, true, NULL, NULL);
---
----- Dzień wolny (nie urlop)
---INSERT INTO employee_work_schedule (doctor_id, schedule_date, is_working_day, is_vacation, start_time, end_time)
---VALUES (1, '2024-05-03', false, false, NULL, NULL);
+INSERT INTO visit_entity (doctor_name, patient, date, description) VALUES
+('Anna Kowalska', 'Jan Nowak', '2025-06-01 10:00:00', 'Wizyta kontrolna'),
+('Piotr Zieliński', 'Maria Wiśniewska', '2025-06-02 11:30:00', 'Ból pleców'),
+('Katarzyna Wójcik', 'Tomasz Lewandowski', '2025-06-03 09:15:00', 'Wystawienie recepty'),
+('Michał Nowak', 'Anna Dąbrowska', '2025-06-04 14:00:00', 'Szczepienie'),
+('Ewa Kaczmarek', 'Paweł Kwiatkowski', '2025-06-05 08:45:00', 'Badania okresowe');

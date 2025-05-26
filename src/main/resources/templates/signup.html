@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Form</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="login-title">Sign Up</h1>
+
+        <form id="registrationForm" class="login-form">
+            <div class="input-field">
+                <i class="mdi mdi-account input-icon"></i>
+                <input type="text" id="username" name="username" required placeholder=" ">
+                <label for="username">Username</label>
+            </div>
+
+            <div class="input-field">
+                <i class="mdi mdi-email input-icon"></i>
+                <input type="email" id="email" name="email" required placeholder=" ">
+                <label for="email">Email</label>
+            </div>
+
+            <div class="input-field">
+                <i class="mdi mdi-lock input-icon"></i>
+                <input type="password" id="password" name="password" required placeholder=" ">
+                <label for="password">Password</label>
+                <i class="mdi mdi-eye-off password-toggle" id="togglePassword"></i>
+            </div>
+
+            <div class="input-field">
+                <i class="mdi mdi-lock-check input-icon"></i>
+                <input type="password" id="passwordcon" name="passwordcon" required placeholder=" ">
+                <label for="passwordcon">Confirm Password</label>
+                <i class="mdi mdi-eye-off password-toggle" id="toggleConfirmPassword"></i>
+            </div>
+
+            <div id="error-message" class="error-message"></div>
+
+            <button type="submit" class="login-button">SIGN UP</button>
+        </form>
+
+        <div class="register-link">
+            <span>Already have an account?</span>
+            <a href="/login">Log In</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('mdi-eye-off');
+        this.classList.toggle('mdi-eye');
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('passwordcon');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('mdi-eye-off');
+        this.classList.toggle('mdi-eye');
+    });
+
+    // Form submission
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('passwordcon').value;
+        const email = document.getElementById('email').value;
+        const errorMessage = document.getElementById('error-message');
+
+        // Reset error message
+        errorMessage.textContent = '';
+        errorMessage.style.display = 'none';
+
+        // Validation
+        if (password !== confirmPassword) {
+            errorMessage.textContent = 'Passwords do not match!';
+            errorMessage.style.display = 'block';
+            return;
+        }
+
+        if (password.length < 6) {
+            errorMessage.textContent = 'Password must be at least 6 characters long!';
+            errorMessage.style.display = 'block';
+            return;
+        }
+
+        const data = {
+            username,
+            email,
+            password
+        };
+
+        fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    return response.json().then(err => {
+                        errorMessage.textContent = err.message || 'Registration failed!';
+                        errorMessage.style.display = 'block';
+                    });
+                }
+            })
+            .catch(error => {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            });
+    });
+</script>
+</body>
+</html>
