@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -23,5 +25,6 @@ public class Patient {
     private String email;
     private String phoneNumber;
     private String identificationNumber;
+    private LocalDate birthDate;
 
 }

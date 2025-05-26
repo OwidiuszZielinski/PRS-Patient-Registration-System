@@ -148,10 +148,22 @@
       </v-card>
     </v-dialog>
   </v-card>
+  <v-card flat class="pa-4 mt-1">
+    <v-row>
+      <v-col cols="12" md="12" class="d-flex justify-end">
+        <v-btn
+          :disabled="isDisabled"
+          color="#452b6f"
+          small
+          @click="fillSchedules()">
+          Fill current month schedules
+        </v-btn>
+      </v-col>
+    </v-row>
+  </v-card>
 </template>
 
 <script>
-import doctorService from '@/services/DoctorService'
 import axios from 'axios'
 
 export default {
@@ -164,6 +176,7 @@ export default {
   },
   data() {
     return {
+      isDisabled: false,
       scheduleDialog: false,
       schedulesDialog: false,
       selectedDoctor: { id: null, fullName: '', scheduleItems: [] },
@@ -288,6 +301,16 @@ export default {
       } catch (error) {
         console.error(error)
         this.$emit('notify', { text: 'Błąd podczas zapisywania grafiku', color: 'error' })
+      }
+    },
+    async fillSchedules() {
+      const url = `http://localhost:8080/api/schedule/fill`
+      try {
+        await axios.post(url)
+        this.$emit('notify', { text: 'Schedules filled', color: 'success' })
+        this.isDisabled = true
+      } catch (err) {
+        this.$emit('notify', { text: 'Error filling schedules', color: 'error' })
       }
     }
   }

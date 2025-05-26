@@ -4,9 +4,22 @@
       <!-- Header -->
       <v-row class="mb-6">
         <v-col cols="12">
-          <v-toolbar color="#764ABC" dark flat>
-            <v-toolbar-title>Registration</v-toolbar-title>
-            <v-spacer/>
+          <v-toolbar color="#764ABC" dark flat elevation="2" class="fancy-toolbar">
+            <!-- One-time shimmer overlay -->
+            <div class="shimmer-overlay"></div>
+
+            <v-toolbar-title class="header-content">
+              <span class="title-text">Registration</span>
+            </v-toolbar-title>
+
+            <!-- Persistent BMW M stripes at end of toolbar -->
+            <div class="stripe-container">
+              <span class="stripe blue"></span>
+              <span class="stripe navy"></span>
+              <span class="stripe red"></span>
+            </div>
+
+            <v-spacer />
           </v-toolbar>
         </v-col>
       </v-row>
@@ -23,67 +36,12 @@
       <v-window v-model="tab">
         <!-- Patient Registration -->
         <v-window-item value="patient">
-          <v-card flat class="pa-4 mt-4">
-            <v-form ref="patientForm" @submit.prevent="addPatient">
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newPatient.firstName"
-                    label="First Name"
-                    :rules="nameRules"
-                    required
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newPatient.lastName"
-                    label="Last Name"
-                    :rules="nameRules"
-                    required
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newPatient.pesel"
-                    label="PESEL"
-                    :rules="peselRules"
-                    required
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-date-input
-                    v-model="newPatient.birthDate"
-                    label="Birth Date"
-                    :rules="dateRules"
-                    placeholder="dd/mm/yyyy"
-                    :display-format="dateFormat"
-                    :first-day-of-week="1"
-                    locale="pl"
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newPatient.email"
-                    label="Email"
-                    :rules="emailRules"
-                    required
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newPatient.phoneNumber"
-                    label="Phone Number"
-                    :rules="phoneRules"
-                    required
-                  />
-                </v-col>
-                <v-col cols="12">
-                  <v-btn type="submit" color="primary">Register Patient</v-btn>
-                  <v-btn class="ml-2" @click="resetPatientForm">Clear</v-btn>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card>
+          <PatientHandler
+            @patient-deleted="loadPatients"
+            @patient-added="loadPatients"
+            @patient-updated="loadPatients"
+            :patients="patients"
+          />
         </v-window-item>
 
         <!-- Add Visit -->
@@ -94,8 +52,8 @@
                 <v-col cols="12" md="6">
                   <v-select
                     v-model="newAppointment.doctor"
-                    :items="doctors"
-                    item-text="fullName"
+                    :items="doctorsToEdit"
+                    item-title="fullName"
                     item-value="id"
                     label="Lekarz"
                     :rules="doctorRules"
@@ -104,8 +62,11 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                  <v-text-field
+                  <v-select
                     v-model="newAppointment.patient"
+                    :items="patients"
+                    item-title="fullName"
+                    item-value="id"
                     label="Pacjent"
                     :rules="patientRules"
                     required
@@ -180,8 +141,8 @@
               class="elevation-1"
             >
               <template v-slot:item.actions="{ item }">
-                <v-icon small class="mr-2" @click="editAppointment(item)">mdi-pencil</v-icon>
-                <v-icon small @click="deleteAppointment(item)">mdi-delete</v-icon>
+                <v-icon color="primary" class="mr-2" @click="editAppointment(item)">mdi-pencil</v-icon>
+                <v-icon color="red" @click="deleteAppointment(item)">mdi-delete</v-icon>
               </template>
             </v-data-table>
           </v-card>
@@ -232,24 +193,24 @@
               </v-row>
             </v-form>
 
-                      <v-card flat class="pa-4 mt-4">
-                        <v-data-table
-                          :headers="doctorHeaders"
-                          :items="doctorsToEdit"
-                          :items-per-page="10"
-                          class="elevation-1"
-                        >
-                  <template v-slot:item.actions="{ item }">
-                <v-icon small class="mr-2" @click="editDoctor(item)">mdi-pencil</v-icon>
-                <v-icon small @click="deleteDoctor(item)">mdi-delete</v-icon>
-              </template>
-                        </v-data-table>
-                      </v-card>
+            <v-card flat class="pa-4 mt-4">
+              <v-data-table
+                :headers="doctorHeaders"
+                :items="doctorsToEdit"
+                :items-per-page="10"
+                class="elevation-1"
+              >
+                <template v-slot:item.actions="{ item }">
+                  <v-icon color="primary" class="mr-2" @click="editDoctor(item)">mdi-pencil</v-icon>
+                  <v-icon color="red" @click="deleteDoctor(item)">mdi-delete</v-icon>
+                </template>
+              </v-data-table>
+            </v-card>
 
           </v-card>
         </v-window-item>
         <v-window-item value="schedule">
-          <DoctorManagement :doctorsToEdit="doctorsToEdit" />
+          <DoctorSchedules :doctorsToEdit="doctorsToEdit"/>
         </v-window-item>
       </v-window>
 
@@ -263,7 +224,7 @@
                 <v-col cols="12" md="6">
                   <v-select
                     v-model="editedAppointment.doctor"
-                    :items="doctors"
+                    :items="doctorsToEdit"
                     item-text="fullName"
                     item-value="id"
                     label="Lekarz"
@@ -401,16 +362,18 @@
 import doctorService from '@/services/DoctorService'
 import visitService from '@/services/VisitService.js'
 import DoctorSchedules from "@/components/DoctorSchedules.vue";
-import DoctorManagement from "@/components/DoctorSchedules.vue";
+import PatientHandler from "@/components/PatientHandler.vue";
+import patientService from "@/services/PatientService.js";
 
 export default {
-  components: {DoctorManagement, DoctorSchedules},
+  name: 'FancyHeader',
+  components: {PatientHandler, DoctorSchedules},
   data() {
     return {
       tab: 'patient',
       timePicker: false,
       editTimePicker: false,
-      newAppointment: { doctor: null, patient: '', date: null, time: '', notes: '' },
+      newAppointment: {doctor: null, patient: '', date: null, time: '', notes: ''},
       newPatient: {
         firstName: '',
         lastName: '',
@@ -425,10 +388,9 @@ export default {
         licenseNumber: '',
         officeId: null
       },
-      doctors: [],
+      patients: [],
       doctorsToEdit: [],
-      appointments: [
-      ],
+      appointments: [],
       doctorRules: [v => !!v || 'Wybierz lekarza'],
       patientRules: [v => !!v || 'Wprowadź pacjenta'],
       nameRules: [
@@ -468,15 +430,15 @@ export default {
       ],
       days: ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'],
       scheduleDialog: false,
-      selectedDoctor: { id: null, fullName: '', schedule: {} },
+      selectedDoctor: {id: null, fullName: '', schedule: {}},
       editDoctorDialog: false,
-          editedDoctor: {
-            id: null,
-            firstName: '',
-            lastName: '',
-            licenseNumber: '',
-            officeId: null
-          },
+      editedDoctor: {
+        id: null,
+        firstName: '',
+        lastName: '',
+        licenseNumber: '',
+        officeId: null
+      },
       editDialog: false,
       editedAppointment: {
         id: null,
@@ -491,51 +453,54 @@ export default {
       snackbarColor: 'success',
     }
   },
-   computed: {
-      appointmentHeaders() {
-         return [
-           { title: 'ID',           key: 'id',           align: 'start', sortable: true },
-           { title: 'Doctor',       key: 'doctorName',   align: 'start', sortable: true },
-           { title: 'Patient',      key: 'patient',      align: 'start', sortable: true },
-           { title: 'Date',         key: 'date',         align: 'start', sortable: true },
-           { title: 'Description',         key: 'description',  align: 'start', sortable: true },
-           { title: 'Actions',        key: 'actions',      align: 'end',   sortable: false }
-         ]
-       },
-       doctorHeaders() {
-          return [
-               { title: 'Doctor ID',      key: 'id',            align: 'start', sortable: true },
-               { title: 'First Name',     key: 'firstName',     align: 'start', sortable: true },
-               { title: 'Last Name',      key: 'lastName',      align: 'start', sortable: true },
-               { title: 'License Number', key: 'licenseNumber', align: 'start', sortable: true },
-               { title: 'Office ID',      key: 'officeId',      align: 'start', sortable: true },
-               { title: 'Actions',        key: 'actions',      align: 'end',   sortable: false }
-             ]
-       },
-
-    formattedDoctors() {
-      return this.doctors.map(d => ({
-        ...d,
-        fullName: `${d.firstName} ${d.lastName}`,
-        schedule: this.formatSchedule(d.employeeWorkSchedules)
-      }))
+  computed: {
+    appointmentHeaders() {
+      return [
+        {title: 'ID', key: 'id', align: 'start', sortable: true},
+        {title: 'Doctor', key: 'doctorName', align: 'start', sortable: true},
+        {title: 'Patient', key: 'patient', align: 'start', sortable: true},
+        {title: 'Date', key: 'date', align: 'start', sortable: true},
+        {title: 'Description', key: 'description', align: 'start', sortable: true},
+        {title: 'Actions', key: 'actions', align: 'end', sortable: false}
+      ]
     },
+    doctorHeaders() {
+      return [
+        {title: 'Doctor ID', key: 'id', align: 'start', sortable: true},
+        {title: 'First Name', key: 'firstName', align: 'start', sortable: true},
+        {title: 'Last Name', key: 'lastName', align: 'start', sortable: true},
+        {title: 'License Number', key: 'licenseNumber', align: 'start', sortable: true},
+        {title: 'Office ID', key: 'officeId', align: 'start', sortable: true},
+        {title: 'Actions', key: 'actions', align: 'end', sortable: false}
+      ]
+    },
+
     allowedMinutes() {
       return m => m % 15 === 0
     }
   },
   created() {
-    this.loadDoctorsFullName()
     this.loadAppointments()
     this.loadDoctors()
+    this.loadPatients()
   },
   methods: {
-    async loadDoctorsFullName() {
+    async loadPatients() {
       try {
-        const res = await doctorService.getDoctorsFullNames()
-        this.doctors = res.data
+        const res = await patientService.getPatients()
+        this.patients = res.data.map(d => ({
+          id: d.id,
+          firstname: d.firstname,
+          lastname: d.lastname,
+          email: d.email,
+          phoneNumber: d.phoneNumber,
+          identificationNumber: d.identificationNumber,
+          birthDate: d.birthDate,
+          fullName: `${d.firstname} ${d.lastname}`
+        }))
+          .sort((a, b) => a.id - b.id)
       } catch {
-        this.notify('Błąd ładowania lekarzy', 'error')
+        this.notify('Error while patients loading', 'error')
       }
     },
     async loadAppointments() {
@@ -551,39 +516,20 @@ export default {
       }
     },
     async loadDoctors() {
-        try {
-          const res = await doctorService.getDoctors()
-
-          this.doctorsToEdit = res.data.map(d => ({
-            id: d.id,
-            officeId: d.officeId,
-            firstName: d.firstName,
-            lastName: d.lastName,
-            licenseNumber: d.licenseNumber,
-            fullName: `${d.firstName} ${d.lastName}`
-          }))
-          .sort((a, b) => a.id - b.id)
-        } catch (e) {
-          this.notify('Błąd ładowania lekarzy', 'error')
-        }
-      },
-
-    async addPatient() {
       try {
-        // TODO: Uncomment when service is ready
-        // const patientDto = {
-        //   firstName: this.newPatient.firstName,
-        //   lastName: this.newPatient.lastName,
-        //   pesel: this.newPatient.pesel,
-        //   birthDate: this.formatDateForBackend(this.newPatient.birthDate),
-        //   email: this.newPatient.email,
-        //   phoneNumber: this.newPatient.phoneNumber
-        // };
-        // await patientService.addPatient(patientDto);
-        this.notify('Patient registered successfully!', 'success');
-        this.resetPatientForm();
-      } catch (error) {
-        this.notify('Error registering patient: ' + (error.response?.data?.message || error.message), 'error');
+        const res = await doctorService.getDoctors()
+
+        this.doctorsToEdit = res.data.map(d => ({
+          id: d.id,
+          officeId: d.officeId,
+          firstName: d.firstName,
+          lastName: d.lastName,
+          licenseNumber: d.licenseNumber,
+          fullName: `${d.firstName} ${d.lastName}`
+        }))
+          .sort((a, b) => a.id - b.id)
+      } catch (e) {
+        this.notify('Błąd ładowania lekarzy', 'error')
       }
     },
 
@@ -598,51 +544,50 @@ export default {
         await doctorService.addDoctor(doctorDto);
         this.notify('Doctor registered successfully!', 'success');
         this.resetDoctorForm();
-        this.loadDoctorsFullName();
         this.loadDoctors();
       } catch (error) {
         this.notify('Error registering doctor: ' + (error.response?.data?.message || error.message), 'error');
       }
     },
-editDoctor(item) {
-    this.editedDoctor = {
-      id:            item.id,
-      firstName:     item.firstName,
-      lastName:      item.lastName,
-      licenseNumber: item.licenseNumber,
-      officeId:      item.officeId
-    };
-    this.editDoctorDialog = true;
-  },
-
-  async updateDoctor() {
-    try {
-      const dto = {
-        id:     this.editedDoctor.id,
-        firstName:    this.editedDoctor.firstName,
-        lastName:     this.editedDoctor.lastName,
-        licenseNumber:this.editedDoctor.licenseNumber,
-        officeId:     this.editedDoctor.officeId
+    editDoctor(item) {
+      this.editedDoctor = {
+        id: item.id,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        licenseNumber: item.licenseNumber,
+        officeId: item.officeId
       };
-      await doctorService.updateDoctor(dto);
-      this.notify('Doctor updated successfully!', 'success');
-      this.editDoctorDialog = false;
-      this.loadDoctors();
-    } catch (error) {
-      this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error');
-    }
-  },
+      this.editDoctorDialog = true;
+    },
 
-  async deleteDoctor(item) {
-        try {
-          await doctorService.delete(item.id)
-          this.notify('Doctor removed', 'success')
-          await this.loadDoctors()
-        } catch (error) {
-          console.error('Error deleting doctor:', error)
-          this.notify('Error deleting doctor', 'error')
-        }
-      },
+    async updateDoctor() {
+      try {
+        const dto = {
+          id: this.editedDoctor.id,
+          firstName: this.editedDoctor.firstName,
+          lastName: this.editedDoctor.lastName,
+          licenseNumber: this.editedDoctor.licenseNumber,
+          officeId: this.editedDoctor.officeId
+        };
+        await doctorService.updateDoctor(dto);
+        this.notify('Doctor updated successfully!', 'success');
+        this.editDoctorDialog = false;
+        this.loadDoctors();
+      } catch (error) {
+        this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error');
+      }
+    },
+
+    async deleteDoctor(item) {
+      try {
+        await doctorService.delete(item.id)
+        this.notify('Doctor removed', 'success')
+        await this.loadDoctors()
+      } catch (error) {
+        console.error('Error deleting doctor:', error)
+        this.notify('Error deleting doctor', 'error')
+      }
+    },
     async addAppointment() {
       try {
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
@@ -717,7 +662,7 @@ editDoctor(item) {
     },
 
     resetForm() {
-      this.newAppointment = { doctor: null, patient: '', date: null, time: '', notes: '' }
+      this.newAppointment = {doctor: null, patient: '', date: null, time: '', notes: ''}
       this.$refs.appointmentForm.resetValidation()
     },
 
@@ -774,3 +719,62 @@ editDoctor(item) {
   }
 }
 </script>
+<style scoped>
+
+.fancy-toolbar {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+}
+
+.shimmer-overlay {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: calc(100% + 60px);
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  transform: skewX(-20deg);
+  animation: shimmer-slide 2.5s ease-out forwards;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.shimmer-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #0066b1 0px,  #0066b1 10px,
+    #002d72 15px, #002d72 27px,
+    #e21a1c 33px, #e21a1c 45px
+  );
+}
+
+@keyframes shimmer-slide {
+  0%   { left: -100%; }
+  100% { left: 97%; }
+}
+
+.stripe-container {
+  position: absolute;
+  right: 16px;
+  bottom: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+.stripe {
+  width: 8px;
+  height: 24px;
+  transform: rotate(20deg);
+}
+
+</style>
