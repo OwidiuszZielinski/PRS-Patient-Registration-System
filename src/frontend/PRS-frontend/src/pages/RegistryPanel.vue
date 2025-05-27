@@ -9,7 +9,7 @@
             <div class="shimmer-overlay"></div>
 
             <v-toolbar-title class="header-content">
-             Registration
+              Registration
             </v-toolbar-title>
 
             <!-- Persistent BMW M stripes at end of toolbar -->
@@ -249,9 +249,7 @@
                 <v-col cols="12" md="6">
                   <v-select
                     v-model="editedAppointment.doctor"
-                    :items="doctorsToEdit"
-                    item-text="fullName"
-                    item-value="id"
+                    :items="doctorsToEdit.map(doc => doc.fullName)"
                     label="Lekarz"
                     :rules="doctorRules"
                     required
