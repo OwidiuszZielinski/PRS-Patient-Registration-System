@@ -78,7 +78,7 @@
                     v-model="newAppointment.doctor"
                     :items="doctorsToEdit"
                     item-title="fullName"
-                    item-value="id"
+                    item-value="fullName"
                     label="Lekarz"
                     :rules="doctorRules"
                     required
@@ -90,7 +90,7 @@
                     v-model="newAppointment.patient"
                     :items="patients"
                     item-title="fullName"
-                    item-value="id"
+                    item-value="fullName"
                     label="Pacjent"
                     :rules="patientRules"
                     required
@@ -443,7 +443,7 @@ export default {
       ],
       dateRules: [
         v => !!v || 'Date is required',
-        v => v instanceof Date || 'Invalid date format'
+        v => /^\d{2}\/\d{2}\/\d{4}$/.test(v) || 'Invalid date format'
       ],
       timeRules: [
         v => !!v || 'Time is required',
@@ -787,7 +787,7 @@ export default {
     left: -100%;
   }
   100% {
-    left: 97%;
+    left: 95%;
   }
 }
 
