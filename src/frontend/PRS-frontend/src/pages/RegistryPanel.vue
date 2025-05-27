@@ -165,7 +165,7 @@
               class="elevation-1"
             >
               <template v-slot:item.actions="{ item }">
-                <v-icon color="primary" class="mr-2" @click="editAppointment(item)">mdi-pencil</v-icon>
+                <v-icon color="green" class="mr-2" @click="editAppointment(item)">mdi-pencil</v-icon>
                 <v-icon color="red" @click="deleteAppointment(item)">mdi-delete</v-icon>
               </template>
             </v-data-table>
@@ -225,7 +225,7 @@
                 class="elevation-1"
               >
                 <template v-slot:item.actions="{ item }">
-                  <v-icon color="primary" class="mr-2" @click="editDoctor(item)">mdi-pencil</v-icon>
+                  <v-icon color="green" class="mr-2" @click="editDoctor(item)">mdi-pencil</v-icon>
                   <v-icon color="red" @click="deleteDoctor(item)">mdi-delete</v-icon>
                 </template>
               </v-data-table>

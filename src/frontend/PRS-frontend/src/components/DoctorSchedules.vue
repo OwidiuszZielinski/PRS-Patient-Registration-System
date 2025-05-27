@@ -7,7 +7,7 @@
       class="elevation-1"
     >
       <template v-slot:item.actions="{ item }">
-        <v-btn color="primary" small class="ml-2" @click="editSchedule(item)">Edit Schedule</v-btn>
+        <v-btn color="green" small class="ml-2" @click="editSchedule(item)">Edit Schedule</v-btn>
         <v-btn color="yellow" small class="ml-2" @click="viewSchedules(item)">show schedules</v-btn>
       </template>
     </v-data-table>
