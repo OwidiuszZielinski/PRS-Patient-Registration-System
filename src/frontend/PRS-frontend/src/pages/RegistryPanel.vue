@@ -9,7 +9,7 @@
             <div class="shimmer-overlay"></div>
 
             <v-toolbar-title class="header-content">
-              <span class="title-text">Registration</span>
+             Registration
             </v-toolbar-title>
 
             <!-- Persistent BMW M stripes at end of toolbar -->
@@ -19,18 +19,42 @@
               <span class="stripe red"></span>
             </div>
 
-            <v-spacer />
+            <v-spacer/>
           </v-toolbar>
         </v-col>
       </v-row>
 
       <!-- Tabs -->
-      <v-tabs v-model="tab" grow>
-        <v-tab value="patient">Patient</v-tab>
-        <v-tab value="add">Add visit</v-tab>
-        <v-tab value="list">Visits</v-tab>
-        <v-tab value="doctor">Doctor</v-tab>
-        <v-tab value="schedule">Schedules</v-tab>
+      <v-tabs
+        v-model="tab"
+        class="custom-tabs"
+        grow
+        background-color="transparent"
+      >
+        <v-tab value="patient">
+          <v-icon left>mdi-account</v-icon>
+          Patient
+        </v-tab>
+
+        <v-tab value="add">
+          <v-icon left>mdi-plus-box</v-icon>
+          Add visit
+        </v-tab>
+
+        <v-tab value="list">
+          <v-icon left>mdi-format-list-bulleted</v-icon>
+          Visits
+        </v-tab>
+
+        <v-tab value="doctor">
+          <v-icon left>mdi-doctor</v-icon>
+          Doctor
+        </v-tab>
+
+        <v-tab value="schedule">
+          <v-icon left>mdi-calendar-clock</v-icon>
+          Schedules
+        </v-tab>
       </v-tabs>
 
       <v-window v-model="tab">
@@ -752,15 +776,19 @@ export default {
   height: 100%;
   background: linear-gradient(
     90deg,
-    #0066b1 0px,  #0066b1 10px,
+    #0066b1 0px, #0066b1 10px,
     #002d72 15px, #002d72 27px,
     #e21a1c 33px, #e21a1c 45px
   );
 }
 
 @keyframes shimmer-slide {
-  0%   { left: -100%; }
-  100% { left: 97%; }
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 97%;
+  }
 }
 
 .stripe-container {
@@ -771,10 +799,40 @@ export default {
   gap: 4px;
   z-index: 2;
 }
+
 .stripe {
   width: 8px;
   height: 24px;
   transform: rotate(20deg);
 }
 
+.custom-tabs {
+
+  background: linear-gradient(#5d3997, #484951);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.custom-tabs .v-tab {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  text-transform: none;
+  transition: color 0.3s;
+  padding: 12px 20px;
+}
+
+.custom-tabs .v-tab--active {
+  color: #ffffff;
+}
+
+.custom-tabs .v-tabs-slider {
+  height: 4px !important;
+  border-radius: 2px;
+  background: #ffeb3b !important;
+}
+
+.custom-tabs .v-icon {
+  font-size: 25px;
+  margin-right: 8px;
+}
 </style>

@@ -19,6 +19,9 @@ public class PatientService {
     }
 
     public void save(PatientDto patientDto) {
+        if (patientDto.identificationNumber().isEmpty()) {
+            throw new RuntimeException("identification number is null");
+        }
         patientRepository.save(patientDto.toPatient());
     }
 
