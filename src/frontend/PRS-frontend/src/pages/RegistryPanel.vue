@@ -106,6 +106,7 @@
                     :display-format="dateFormat"
                     :first-day-of-week="1"
                     locale="pl"
+                    :min="today"
                   />
                 </v-col>
 
@@ -275,6 +276,7 @@
                     :display-format="dateFormat"
                     :first-day-of-week="1"
                     locale="pl"
+                    :min="today"
                   />
                 </v-col>
 
@@ -445,6 +447,7 @@ export default {
         v => !!v || 'Date is required',
         v => /^\d{2}\/\d{2}\/\d{4}$/.test(v) || 'Invalid date format'
       ],
+      today: new Date().toISOString().substr(0,10),
       timeRules: [
         v => !!v || 'Time is required',
         v => /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/.test(v) || 'Format HH:mm'
