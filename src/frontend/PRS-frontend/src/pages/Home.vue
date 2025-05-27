@@ -63,7 +63,6 @@
       </v-row>
     </div>
 
-    <!-- Right Side Panel -->
     <div class="side-panel right-panel">
       <v-sheet class="side-sheet pa-3" elevation="11">
         <div class="text-caption">
@@ -87,19 +86,24 @@
       <!-- Welcome Card -->
       <v-row class="justify-center" no-gutters>
         <v-col cols="12" md="10" lg="8" class="mt-8">
-          <v-card class="welcome-card pa-6" elevation="8" shaped>
-            <v-card-title class="welcome-title text-h4 text-center mb-4">
-              <span class="welcome-highlight">Welcome in PRS</span>
-            </v-card-title>
-            <v-card-text class="text-center">
-              <p class="welcome-subtitle mb-4">Modern Patient Registration System</p>
-              <div class="welcome-decoration d-flex align-center justify-center">
-                <div class="decoration-line"></div>
-                <div class="decoration-circle"></div>
-                <div class="decoration-line"></div>
-              </div>
-            </v-card-text>
-          </v-card>
+          <!-- Fade in the card -->
+          <v-fade-transition mode="in-out">
+            <v-card class="welcome-card pa-6" elevation="8" shaped>
+              <v-card-title class="welcome-title text-h4 text-center mb-4">
+                <span class="welcome-highlight">Welcome in PRS</span>
+              </v-card-title>
+              <v-card-text class="text-center">
+                <p class="welcome-subtitle mb-4">Modern Patient Registration System</p>
+                <div class="welcome-decoration d-flex align-center justify-center">
+                  <!-- Slide-in lines -->
+                  <div class="decoration-line line-left"></div>
+                  <!-- Pulsing circle -->
+                  <div class="decoration-circle pulse"></div>
+                  <div class="decoration-line line-right"></div>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-fade-transition>
         </v-col>
       </v-row>
 
@@ -156,7 +160,6 @@
 
                 <v-col cols="12" md="6">
                   <div class="project-description pa-6">
-                    <!-- Wyeksponowany nagłówek -->
                     <h3 class="text-h6 font-weight-bold mb-4">
                       PRS (Patient Registration System)
                     </h3>
@@ -361,14 +364,6 @@ export default {
 .home-page,
 .home-page * {
   color: rgb(118, 74, 188) !important;
-}
-
-/* white overrides */
-.creator-name,
-.description-text,
-.tech-chip,
-.tech-chip .v-chip__content {
-  color: #fff !important;
 }
 
 .home-page {
@@ -596,5 +591,62 @@ export default {
 .weather-search .v-field__outline,
 .weather-search .v-input__slot {
   background-color: transparent !important;
+}
+.welcome-card {
+  /* Start slightly scaled down and grow */
+  transform: scale(0.95);
+  animation: cardGrow 0.6s ease-out forwards;
+}
+
+@keyframes cardGrow {
+  to { transform: scale(1); }
+}
+
+.welcome-decoration {
+  position: relative;
+  height: 40px;
+}
+
+.decoration-line {
+  width: 50px;
+  height: 3px;
+  background-color: #5d3997;
+}
+
+.line-left {
+  animation: slideLeft 0.8s ease-out forwards;
+  transform: translateX(-30px);
+  opacity: 0;
+}
+
+.line-right {
+  animation: slideRight 0.8s ease-out forwards;
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+@keyframes slideLeft {
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideRight {
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.decoration-circle {
+  width: 12px;
+  height: 12px;
+  background-color: #5d3997;
+  border-radius: 50%;
+  margin: 0 8px;
+}
+
+.pulse {
+  animation: pulseAnim 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseAnim {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
 }
 </style>
