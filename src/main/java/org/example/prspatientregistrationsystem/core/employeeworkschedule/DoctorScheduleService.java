@@ -110,8 +110,8 @@ public class DoctorScheduleService {
 
 
     @Transactional
-    public void clearByDoctorId(Long doctorId) {
-        doctorScheduleRepo.deleteDoctorScheduleByDoctor_DoctorId(doctorId);
+    public void clearByDoctorId() {
+        doctorScheduleRepo.deleteAll();
     }
 
     public List<ScheduleDto> findByDoctorId(Long doctorId) {

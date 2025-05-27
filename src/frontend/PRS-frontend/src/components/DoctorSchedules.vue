@@ -1,4 +1,13 @@
 <template>
+  <v-alert
+    type="success"
+    v-if="isDisabled"
+    dense
+    text
+    class="mb-4"
+  >
+    Grafik na bieżący miesiąc został wypełniony.
+  </v-alert>
   <v-card flat class="pa-4 mt-4">
     <v-data-table
       :headers="doctorHeaders"
@@ -152,11 +161,17 @@
     <v-row>
       <v-col cols="12" md="12" class="d-flex justify-end">
         <v-btn
+          color="#452b6f"
+          small
+          @click="clearSchedules">
+          CLEAR SCHEDULES
+        </v-btn>
+        <v-btn
           :disabled="isDisabled"
           color="#452b6f"
           small
-          @click="fillSchedules()">
-          Fill current month schedules
+          @click="fillSchedules">
+          {{ isDisabled ? 'FILLED CURRENT MONTH' : 'Fill current month schedules' }}
         </v-btn>
       </v-col>
     </v-row>
@@ -165,6 +180,7 @@
 
 <script>
 import axios from 'axios'
+import {tr} from "vuetify/locale";
 
 export default {
   props: {
@@ -176,7 +192,7 @@ export default {
   },
   data() {
     return {
-      isDisabled: false,
+      isDisabled: localStorage.getItem('filledCurrentMonth') === 'true',
       scheduleDialog: false,
       schedulesDialog: false,
       selectedDoctor: { id: null, fullName: '', scheduleItems: [] },
@@ -212,6 +228,9 @@ export default {
     allowedMinutes() {
       return m => m % 15 === 0
     }
+  },
+  mounted() {
+    this.isDisabled = localStorage.getItem('filledCurrentMonth') === 'true'
   },
 
   methods: {
@@ -262,6 +281,18 @@ export default {
         this.$emit('notify', { text: 'Błąd podczas usuwania grafiku', color: 'error' })
       }
     },
+
+    async clearSchedules() {
+      try {
+        const url = `http://localhost:8080/api/schedule/all`
+        await axios.delete(url);
+        this.isDisabled = false
+      } catch (error) {
+        console.error(error)
+        this.$emit('notify', { text: 'Błąd podczas usuwania grafiku', color: 'error' })
+      }
+    },
+
     addScheduleItem() {
       this.selectedDoctor.scheduleItems.push({
         date: null,
@@ -309,6 +340,7 @@ export default {
         await axios.post(url)
         this.$emit('notify', { text: 'Schedules filled', color: 'success' })
         this.isDisabled = true
+        localStorage.setItem('filledCurrentMonth', 'true')
       } catch (err) {
         this.$emit('notify', { text: 'Error filling schedules', color: 'error' })
       }

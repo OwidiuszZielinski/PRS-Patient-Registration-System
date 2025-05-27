@@ -46,8 +46,8 @@ public class ScheduleController {
         doctorScheduleService.deleteSchedule(doctorId, scheduleDto);
     }
 
-    @DeleteMapping(path = "{doctorId}/all")
-    public void clearSchedule(@PathVariable Long doctorId) {
-        doctorScheduleService.clearByDoctorId(doctorId);
+    @DeleteMapping(path = "all")
+    public void clearSchedule() {
+        doctorScheduleService.clearByDoctorId();
     }
 }

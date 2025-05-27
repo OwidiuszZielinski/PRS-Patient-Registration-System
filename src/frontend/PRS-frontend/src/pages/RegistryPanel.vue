@@ -257,12 +257,11 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="editedAppointment.patient"
-                    label="Pacjent"
-                    :rules="patientRules"
-                    required
-                  />
+                  <label class="text-caption text--secondary">Patient</label>
+                  <div class="pa-2 grey lighten-4 rounded">
+                    {{ editedAppointment.patient }}
+                  </div>
+
                 </v-col>
 
                 <v-col cols="12" md="6">
