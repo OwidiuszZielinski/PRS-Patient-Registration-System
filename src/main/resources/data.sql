@@ -12,6 +12,8 @@ INSERT INTO visit_entity (doctor_name, patient, date, description) VALUES
 ('Michał Nowak', 'Anna Dąbrowska', '2025-06-04 14:00:00', 'Szczepienie'),
 ('Ewa Kaczmarek', 'Paweł Kwiatkowski', '2025-06-05 08:45:00', 'Badania okresowe');
 
+INSERT INTO app_user (email, password, username) values
+    ('owi19955@gmail.com', 'admin123', 'admin123');
 
 INSERT INTO patient (
     first_name,
