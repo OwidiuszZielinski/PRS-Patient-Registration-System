@@ -27,7 +27,7 @@
         <url/>
     </scm>
     <properties>
-        <java.version>23</java.version>
+        <java.version>17</java.version>
         <spring-ai.version>1.0.0</spring-ai.version>
     </properties>
     <dependencyManagement>
@@ -110,6 +110,18 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
     
 
     </dependencies>
@@ -119,6 +131,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.4.4</version>
                 <configuration>
                     <excludes>
                         <exclude>
