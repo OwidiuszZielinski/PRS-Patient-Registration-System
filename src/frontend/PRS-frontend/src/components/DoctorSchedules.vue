@@ -6,8 +6,22 @@
     text
     class="mb-4"
   >
-    Grafik na bieżący miesiąc został wypełniony.
+    Schedule for current month has filled.
   </v-alert>
+
+  <v-dialog v-model="clearDialog" max-width="500">
+    <v-card>
+      <v-card-title class="headline">Confirm Clear All Schedules</v-card-title>
+      <v-card-text>
+        This operation will remove all schedules. Are you sure?
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text @click="clearDialog = false">Cancel</v-btn>
+        <v-btn text color="error" @click="clearSchedules">Confirm</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <v-card flat class="pa-4 mt-4">
     <v-data-table
       :headers="doctorHeaders"
@@ -163,7 +177,8 @@
         <v-btn
           color="#452b6f"
           small
-          @click="clearSchedules">
+          @click="clearDialog = true"
+        >
           CLEAR SCHEDULES
         </v-btn>
         <v-btn
@@ -193,6 +208,7 @@ export default {
   data() {
     return {
       isDisabled: localStorage.getItem('filledCurrentMonth') === 'true',
+      clearDialog: false,
       scheduleDialog: false,
       schedulesDialog: false,
       selectedDoctor: { id: null, fullName: '', scheduleItems: [] },
@@ -287,6 +303,7 @@ export default {
         const url = `http://localhost:8080/api/schedule/all`
         await axios.delete(url);
         this.isDisabled = false
+        this.clearDialog = false
       } catch (error) {
         console.error(error)
         this.$emit('notify', { text: 'Błąd podczas usuwania grafiku', color: 'error' })
