@@ -26,7 +26,7 @@ class EmailControllerTest {
         String subject = "Complaint";
         String body = "How to schedule NFZ visit sooner than in 5 years?";
 
-        String expectedResponse = "Email sent successfully";
+        String expectedResponse = "Email sent successfully!";
 
         when(emailService.sendEmail(to, subject, body)).thenReturn(expectedResponse);
 
