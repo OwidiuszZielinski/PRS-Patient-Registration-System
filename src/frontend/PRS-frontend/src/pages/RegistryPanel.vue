@@ -150,8 +150,8 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-btn type="submit" color="primary">Dodaj wizytę</v-btn>
-                  <v-btn class="ml-2" @click="resetForm">Wyczyść</v-btn>
+                  <v-btn type="submit" color="primary">Add a visit</v-btn>
+                  <v-btn class="ml-2" @click="resetForm">Clear</v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -244,7 +244,7 @@
       <!-- Edit Visit Dialog -->
       <v-dialog v-model="editDialog" max-width="600">
         <v-card>
-          <v-card-title>Edytuj wizytę</v-card-title>
+          <v-card-title>Edit visit</v-card-title>
           <v-card-text>
             <v-form ref="editForm">
               <v-row>
@@ -252,7 +252,7 @@
                   <v-select
                     v-model="editedAppointment.doctor"
                     :items="doctorsToEdit.map(doc => doc.fullName)"
-                    label="Lekarz"
+                    label="Doctor"
                     :rules="doctorRules"
                     required
                   />
@@ -269,7 +269,7 @@
                 <v-col cols="12" md="6">
                   <v-date-input
                     v-model="editedAppointment.date"
-                    label="Data wizyty"
+                    label="Date of visit"
                     :rules="dateRules"
                     placeholder="dd/mm/yyyy"
                     :display-format="dateFormat"
@@ -293,7 +293,7 @@
                         v-bind="attrs"
                         v-on="on"
                         v-model="editedAppointment.time"
-                        label="Godzina"
+                        label="Hour"
                         prepend-icon="mdi-clock-time-four-outline"
                         :rules="timeRules"
                         hint="HH:mm"
@@ -312,7 +312,7 @@
                 <v-col cols="12">
                   <v-textarea
                     v-model="editedAppointment.notes"
-                    label="Uwagi"
+                    label="Comments"
                   />
                 </v-col>
               </v-row>
@@ -320,13 +320,13 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer/>
-            <v-btn text @click="editDialog = false">Anuluj</v-btn>
-            <v-btn color="primary" @click="updateAppointment">Zapisz</v-btn>
+            <v-btn text @click="editDialog = false">Cancel</v-btn>
+            <v-btn color="primary" @click="updateAppointment">Save</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
 
-      <!-- Dialog edycji lekarza -->
+      <!-- Doctor edit dialogue -->
       <v-dialog v-model="editDoctorDialog" max-width="500">
         <v-card>
           <v-card-title>Edit Doctor</v-card-title>
@@ -417,8 +417,8 @@ export default {
       patients: [],
       doctorsToEdit: [],
       appointments: [],
-      doctorRules: [v => !!v || 'Wybierz lekarza'],
-      patientRules: [v => !!v || 'Wprowadź pacjenta'],
+      doctorRules: [v => !!v || 'Choose a doctor'],
+      patientRules: [v => !!v || 'Enter the patient'],
       nameRules: [
         v => !!v || 'Name is required',
         v => (v && v.length >= 2) || 'Name must be at least 2 characters'
@@ -455,7 +455,7 @@ export default {
       scheduleRules: [
         v => !v || /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v) || 'Format HH:MM-HH:MM'
       ],
-      days: ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'],
+      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       scheduleDialog: false,
       selectedDoctor: {id: null, fullName: '', schedule: {}},
       editDoctorDialog: false,
@@ -539,7 +539,7 @@ export default {
         }))
           .sort((a, b) => a.id - b.id)
       } catch {
-        this.notify('Błąd ładowania wizyt', 'error')
+        this.notify('Error loading visits', 'error')
       }
     },
     async loadDoctors() {
@@ -556,7 +556,7 @@ export default {
         }))
           .sort((a, b) => a.id - b.id)
       } catch (e) {
-        this.notify('Błąd ładowania lekarzy', 'error')
+        this.notify('Doctor loading error', 'error')
       }
     },
 
@@ -625,11 +625,11 @@ export default {
           description: this.newAppointment.notes
         }
         await visitService.addVisit(visitDto)
-        this.notify('Wizyta dodana pomyślnie!', 'success')
+        this.notify('Visit added successfully!', 'success')
         this.resetForm()
         this.loadAppointments()
       } catch (error) {
-        this.notify('Błąd podczas dodawania wizyty: ' + (error.response?.data?.message || error.message), 'error')
+        this.notify('Error while adding visit: ' + (error.response?.data?.message || error.message), 'error')
       }
     },
 
@@ -657,11 +657,11 @@ export default {
           description: this.editedAppointment.notes
         };
         await visitService.update(visitDto);
-        this.notify('Wizyta zaktualizowana pomyślnie!', 'success');
+        this.notify('Visit updated successfully!', 'success');
         this.editDialog = false;
         this.loadAppointments();
       } catch (error) {
-        this.notify('Błąd podczas aktualizacji wizyty: ' + (error.response?.data?.message || error.message), 'error');
+        this.notify('Error updating visit: ' + (error.response?.data?.message || error.message), 'error');
       }
     },
 
@@ -718,11 +718,11 @@ export default {
     async deleteAppointment(item) {
       try {
         await visitService.delete(item.id)
-        this.notify('Wizyta usunięta', 'success')
+        this.notify('Visit deleted', 'success')
         await this.loadAppointments()
       } catch (error) {
-        console.error('Błąd usuwania wizyty:', error)
-        this.notify('Nie udało się usunąć wizyty', 'error')
+        console.error('Error deleting visit:', error)
+        this.notify('Could not delete visit', 'error')
       }
     },
 
