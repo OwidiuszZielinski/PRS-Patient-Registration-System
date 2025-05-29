@@ -79,7 +79,7 @@
                     :items="doctorsToEdit"
                     item-title="fullName"
                     item-value="fullName"
-                    label="Lekarz"
+                    label="Doctor"
                     :rules="doctorRules"
                     required
                   />
@@ -91,16 +91,17 @@
                     :items="patients"
                     item-title="fullName"
                     item-value="fullName"
-                    label="Pacjent"
+                    label="Patient"
                     :rules="patientRules"
                     required
                   />
                 </v-col>
 
+                <!-- Date of visit -->
                 <v-col cols="12" md="6">
                   <v-date-input
                     v-model="newAppointment.date"
-                    label="Data wizyty"
+                    label="Date of visit"
                     :rules="dateRules"
                     placeholder="dd/mm/yyyy"
                     :display-format="dateFormat"
@@ -110,36 +111,37 @@
                   />
                 </v-col>
 
-                <v-col cols="12" md="6">
-                  <v-menu
-                    v-model="timePicker"
-                    :close-on-content-click="false"
-                    transition="scale-transition"
-                    offset-y
-                    max-width="290"
-                    min-width="290"
-                  >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        v-bind="attrs"
-                        v-on="on"
-                        v-model="newAppointment.time"
-                        label="Godzina"
-                        prepend-icon="mdi-clock-time-four-outline"
-                        :rules="timeRules"
-                        hint="HH:mm"
-                        persistent-hint
-                      />
-                    </template>
-                    <v-time-picker
-                      v-model="newAppointment.time"
-                      format="24hr"
-                      :allowed-minutes="allowedMinutes"
-                      @change="timePicker = false"
-                    />
-                  </v-menu>
-                </v-col>
+                <!-- Time of visit -->
+             <v-col cols="12" md="6">
+               <v-text-field
+                 v-model="newAppointment.time"
+                 :active="timePicker"
+                 :focused="timePicker"
+                 label="Select Time"
+                 placeholder="HH:mm"
+                 prepend-icon="mdi-clock-time-four-outline"
+                 @click:prepend="timePicker = true"
+                 readonly
+                 :rules="timeRules"
+               >
+                 <v-dialog
+                   v-model="timePicker"
+                   activator="parent"
+                   width="290"
+                 >
+                   <v-time-picker
+                     v-if="timePicker"
+                     v-model="newAppointment.time"
+                     @update:minute="timePicker = false"
+                     format="24hr"
+                     locale="pl"
+                   />
+                 </v-dialog>
+               </v-text-field>
+             </v-col>
 
+
+                <!-- Description -->
                 <v-col cols="12">
                   <v-textarea
                     v-model="newAppointment.notes"
@@ -394,6 +396,7 @@ export default {
   data() {
     return {
       tab: 'patient',
+       timeMenu: false,
       timePicker: false,
       editTimePicker: false,
       newAppointment: {doctor: null, patient: '', date: null, time: '', notes: ''},
@@ -499,8 +502,8 @@ export default {
       ]
     },
 
-    allowedMinutes() {
-      return m => m % 15 === 0
+    allowedMinutes(val) {
+      return val % 5 === 0;
     }
   },
   created() {

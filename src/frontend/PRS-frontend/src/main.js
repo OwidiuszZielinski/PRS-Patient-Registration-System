@@ -18,6 +18,8 @@ import { Polish } from 'flatpickr/dist/l10n/pl.js'
 import { VDateInput } from 'vuetify/labs/VDateInput'
 import { createVuetify } from 'vuetify'
 import { pl } from 'vuetify/locale'
+import { VTimePicker } from 'vuetify/labs/VTimePicker'
+import { ref } from 'vue'
 
 const vuetify = createVuetify({
   locale: {
@@ -25,7 +27,14 @@ const vuetify = createVuetify({
     fallback: 'en',                        // (opcjonalnie) jeśli brak tłumaczenia
     messages: { pl },                      // przekazujemy obiekt
   },
+    components: {
+        VTimePicker,
+      },
 })
+
+ const time = ref(null)
+const menu2 = ref(false)
+const moda12 = ref(false)
 
 const app = createApp(App)
   .use(vuetify)
