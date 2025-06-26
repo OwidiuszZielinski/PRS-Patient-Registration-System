@@ -70,7 +70,6 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(httpForm -> {
-                    httpForm.loginPage("/login").permitAll();
                     httpForm.successHandler(new CustomAuthenticationSuccessHandler());
                 })
                 .logout(logout -> logout
@@ -82,7 +81,6 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .authorizeHttpRequests(registry -> {
-                    registry.requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll();
                     registry.anyRequest().permitAll();
                 })
                 .build();

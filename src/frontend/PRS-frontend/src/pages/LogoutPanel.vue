@@ -4,36 +4,46 @@
     <p class="logout-message">Are you sure you want to log out?</p>
 
     <div class="logout-buttons">
-      <button class="logout-button" @click="handleLogout">Yes, Log Out</button>
-      <button class="cancel-button" @click="handleCancel">Cancel</button>
+      <button class="logout-button" @click="handleLogout" :disabled="isLoggingOut">
+        {{ isLoggingOut ? 'Logging Out...' : 'Yes, Log Out' }}
+      </button>
+      <button class="cancel-button" @click="handleCancel" :disabled="isLoggingOut">Cancel</button>
     </div>
 
     <p v-if="logoutSuccess" class="logout-success">Logout success!</p>
+    <p v-if="logoutError" class="logout-error">{{ logoutError }}</p>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const router = useRouter()
 const logoutSuccess = ref(false)
+const logoutError = ref('')
+const isLoggingOut = ref(false)
 
 const handleLogout = async () => {
+  isLoggingOut.value = true
+  logoutError.value = ''
+  
   try {
-    await fetch('http://localhost:8080/logout', {
-      method: 'POST',
-      credentials: 'include'
+    await axios.post('http://localhost:8080/logout', {}, {
+      withCredentials: true
     })
     logoutSuccess.value = true
     setTimeout(() => {
-      window.location.href = 'http://localhost:8080/login'
+      router.push('/login')
     }, 1000)
   } catch (error) {
     console.error('Logout failed', error)
+    logoutError.value = 'Logout failed. Please try again.'
+  } finally {
+    isLoggingOut.value = false
   }
 }
-
 
 const handleCancel = () => {
   router.push('/')
@@ -88,8 +98,13 @@ const handleCancel = () => {
   color: #ffffff;
 }
 
-.logout-button:hover {
+.logout-button:hover:not(:disabled) {
   background-color: #5d3997;
+}
+
+.logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .cancel-button {
@@ -97,8 +112,13 @@ const handleCancel = () => {
   color: #ffffff;
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background-color: #333;
+}
+
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .logout-success {
@@ -106,5 +126,12 @@ const handleCancel = () => {
   font-size: 1rem;
   font-weight: bold;
   color: #00c853;
+}
+
+.logout-error {
+  margin-top: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #f44336;
 }
 </style>

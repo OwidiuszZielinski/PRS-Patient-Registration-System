@@ -1,18 +1,8 @@
 package org.example.prspatientregistrationsystem.core.application;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class UserController {
-
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
-
-    @GetMapping("/register")
-    public String register() {
-        return "signup";
-    }
+    // Endpointy /login i /register zostały usunięte - logowanie obsługiwane przez frontend
 }

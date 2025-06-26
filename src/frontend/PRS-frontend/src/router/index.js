@@ -14,7 +14,8 @@ const routes = [
   { path: '/waiting-room', component: WaitingRoom },
   { path: '/doctor', component: DoctorPanel },
   { path: '/registry', component: RegistryPanel },
-  { path: '/logout', component: LogoutPanel }
+  { path: '/logout', component: LogoutPanel },
+  { path: '/login', component: () => import('@/pages/Login.vue') }
 ]
 
 const router = createRouter({
@@ -23,6 +24,11 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  if (to.path === '/login') {
+    next()
+    return
+  }
+
   try {
     const { data: isAuth } = await axios.get('http://localhost:8080/auth', { withCredentials: true })
     if (!isAuth) {
@@ -30,7 +36,7 @@ router.beforeEach(async (to, from, next) => {
         'Need authentication.',
         3,
         3000,
-        'http://localhost:8080/login'
+        '/login'
       )
     } else {
       next()
@@ -41,7 +47,7 @@ router.beforeEach(async (to, from, next) => {
       'Authentication error.',
       3,
       3000,
-      'http://localhost:8080/login'
+      '/login'
     )
   }
 })
