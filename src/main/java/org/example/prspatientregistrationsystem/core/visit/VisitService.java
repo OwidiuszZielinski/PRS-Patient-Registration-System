@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.prspatientregistrationsystem.core.mail.EmailService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -15,7 +16,9 @@ public class VisitService {
     private final VisitRepository visitRepository;
 
     public void addVisit(VisitDto visitDto) {
-        visitRepository.save(VisitDto.mapToEntity(visitDto));
+        VisitEntity entity = VisitDto.mapToEntity(visitDto);
+        entity.setTotalCost(calculateTotalCost(visitDto.getSelectedServices()));
+        visitRepository.save(entity);
         emailService.scheduleEmailInOneMinute("owi19955@gmail.com", "Visit", "Remember visit at --> ");
     }
 
@@ -33,6 +36,7 @@ public class VisitService {
     public void update(VisitDto visitDto) {
         var toSave = findById(visitDto.getId());
         updateFieleds(visitDto, toSave);
+        toSave.setTotalCost(calculateTotalCost(visitDto.getSelectedServices()));
         visitRepository.save(toSave);
     }
 
@@ -41,9 +45,22 @@ public class VisitService {
         toSave.setDoctorName(visitDto.getDoctorName());
         toSave.setDescription(visitDto.getDescription());
         toSave.setPatient(visitDto.getPatient());
+        toSave.setSelectedServices(visitDto.getSelectedServices() != null ? 
+            visitDto.getSelectedServices().stream()
+                .map(org.example.prspatientregistrationsystem.core.service.ServiceDto::mapToEntity)
+                .toList() : null);
     }
 
     private VisitEntity findById(Long id) {
         return visitRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Visit with id %s not found]".formatted(id)));
+    }
+    
+    private BigDecimal calculateTotalCost(List<org.example.prspatientregistrationsystem.core.service.ServiceDto> services) {
+        if (services == null || services.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return services.stream()
+                .map(org.example.prspatientregistrationsystem.core.service.ServiceDto::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

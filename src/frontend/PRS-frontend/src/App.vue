@@ -10,10 +10,42 @@
         <span class="custom-title font-weight-bold" style="color: #764ABC;">PRS</span>
       </router-link>
       <v-spacer></v-spacer>
-      <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
-      <v-btn rounded="lg" text to="/registry" class="custom-btn">Registration</v-btn>
-      <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
-      <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+      
+      <!-- ADMIN - wszystkie przyciski -->
+      <template v-if="userRole === 'ADMIN'">
+        <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
+        <v-btn rounded="lg" text to="/registry" class="custom-btn">Registration</v-btn>
+        <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
+        <v-btn rounded="lg" text to="/patient-view" class="custom-btn">My account</v-btn>
+        <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+      </template>
+
+      <!-- PATIENT - My Account i Logout -->
+      <template v-else-if="userRole === 'PATIENT'">
+        <v-btn rounded="lg" text to="/patient-view" class="custom-btn">My Account</v-btn>
+        <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+      </template>
+
+      <!-- WAITING_ROOM - tylko Waiting Room -->
+      <template v-else-if="userRole === 'WAITING_ROOM'">
+        <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
+      </template>
+
+      <!-- DOCTOR - Waiting Room, Doctor's office i Logout -->
+      <template v-else-if="userRole === 'DOCTOR'">
+        <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
+        <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
+        <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+      </template>
+
+      <!-- Domyślne przyciski dla niezalogowanych lub nieznanych ról -->
+      <template v-else>
+        <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
+        <v-btn rounded="lg" text to="/registry" class="custom-btn">Registration</v-btn>
+        <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
+        <v-btn rounded="lg" text to="/patient-view" class="custom-btn">My account</v-btn>
+        <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
+      </template>
 
     </v-app-bar>
 
@@ -29,6 +61,11 @@ export default {
   data() {
     return {
       fullscreen: false
+    }
+  },
+  computed: {
+    userRole() {
+      return localStorage.getItem('role');
     }
   },
   methods: {

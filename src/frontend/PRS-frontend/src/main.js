@@ -7,6 +7,8 @@
 // Composables
 import { createApp } from 'vue'
 import App from './App.vue'
+import router from './router'
+import axios from 'axios'
 
 // Plugins
 import { registerPlugins } from '@/plugins'
@@ -36,8 +38,38 @@ const vuetify = createVuetify({
 const menu2 = ref(false)
 const moda12 = ref(false)
 
+// Globalna konfiguracja axios
+axios.defaults.baseURL = 'http://localhost:8080'
+
+// Dodaj token JWT do wszystkich żądań, jeśli istnieje
+const token = localStorage.getItem('jwt_token')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
+// Interceptor do obsługi błędów autoryzacji
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token wygasł lub jest nieprawidłowy
+      localStorage.removeItem('jwt_token')
+      localStorage.removeItem('username')
+      localStorage.removeItem('role')
+      delete axios.defaults.headers.common['Authorization']
+      
+      // Przekieruj na stronę logowania
+      if (router.currentRoute.value.path !== '/login') {
+        router.push('/login')
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 const app = createApp(App)
   .use(vuetify)
+  .use(router)
 
 // zarejestruj globalnie Flatpickra
 app.component('VDateInput', VDateInput)

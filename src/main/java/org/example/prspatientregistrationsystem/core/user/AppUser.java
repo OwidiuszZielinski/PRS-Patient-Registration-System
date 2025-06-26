@@ -1,6 +1,8 @@
 package org.example.prspatientregistrationsystem.core.user;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,4 +18,7 @@ public class AppUser {
     private String username;
     private String email;
     private String password;
+    
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
 }

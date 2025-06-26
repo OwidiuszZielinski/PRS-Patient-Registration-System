@@ -7,14 +7,33 @@ import WaitingRoom from '@/pages/WaitingRoom.vue'
 import DoctorPanel from '@/pages/DoctorPanel.vue'
 import RegistryPanel from '@/pages/RegistryPanel.vue'
 import LogoutPanel from '@/pages/LogoutPanel.vue'
+import PatientVisitPanel from '@/pages/PatientVisitPanel.vue'
+import Register from '@/pages/Register.vue'
 import RedirectBanner from '@/components/RedirectBanner.vue'
+
+// Definicja uprawnień dla każdej ścieżki
+const routePermissions = {
+  '/': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/waiting-room': ['ADMIN', 'DOCTOR', 'WAITING_ROOM'],
+  '/doctor': ['ADMIN', 'DOCTOR'],
+  '/registry': ['ADMIN'],
+  '/logout': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/patient-view': ['ADMIN', 'PATIENT'],
+  '/register': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
+}
 
 const routes = [
   { path: '/', component: Home },
   { path: '/waiting-room', component: WaitingRoom },
   { path: '/doctor', component: DoctorPanel },
   { path: '/registry', component: RegistryPanel },
-  { path: '/logout', component: LogoutPanel }
+  { path: '/logout', component: LogoutPanel },
+  { path: '/patient-view', component: PatientVisitPanel },
+  { path: '/register', component: Register },
+  { path: '/login', component: () => import('@/pages/Login.vue') },
+  // Catch-all route for undefined paths
+  { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
 const router = createRouter({
@@ -23,25 +42,70 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  if (to.path === '/login' || to.path === '/register') {
+    next()
+    return
+  }
+
+  const token = localStorage.getItem('jwt_token')
+  if (!token) {
+    mountCountdownBanner(
+      'Need authentication.',
+      3,
+      3000,
+      '/login'
+    )
+    return
+  }
+
   try {
-    const { data: isAuth } = await axios.get('http://localhost:8080/auth', { withCredentials: true })
-    if (!isAuth) {
+    const response = await axios.get('http://localhost:8080/api/v1/auth/validate', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.data) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
+      // Sprawdzenie uprawnień na podstawie roli
+      const userRole = localStorage.getItem('role')
+      const allowedRoles = routePermissions[to.path]
+      
+      // Jeśli ścieżka nie jest zdefiniowana w uprawnieniach, pozwól na dostęp
+      if (allowedRoles && !allowedRoles.includes(userRole)) {
+        // Użytkownik nie ma uprawnień do tej ścieżki
+        mountCountdownBanner(
+          `Access denied. This resource is not available for your role (${userRole}). Redirecting to home page...`,
+          5,
+          5000,
+          '/'
+        )
+        return
+      }
+      
+      next()
+    } else {
+      localStorage.removeItem('jwt_token')
+      localStorage.removeItem('username')
+      localStorage.removeItem('role')
       mountCountdownBanner(
-        'Need authentication.',
+        'Authentication expired.',
         3,
         3000,
-        'http://localhost:8080/login'
+        '/login'
       )
-    } else {
-      next()
     }
   } catch (err) {
     console.error('Auth check failed:', err)
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('role')
     mountCountdownBanner(
       'Authentication error.',
       3,
       3000,
-      'http://localhost:8080/login'
+      '/login'
     )
   }
 })
@@ -60,6 +124,7 @@ function mountCountdownBanner(baseText, seconds, durationMs, redirectUrl) {
           remaining.value--
           if (remaining.value <= 0) {
             clearInterval(timer)
+            window.location.href = redirectUrl
           }
         }, 1000)
       })

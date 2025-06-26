@@ -30,6 +30,11 @@ public class PatientController {
         return patientService.findById(id);
     }
 
+    @GetMapping(path = "/by-email/{email}")
+    public PatientDto findByEmail(@PathVariable String email) {
+        return patientService.findByEmail(email);
+    }
+
     @PostMapping(path = "/update")
     public void update(@RequestBody PatientUpdateCommand command) {
         patientService.update(command);
