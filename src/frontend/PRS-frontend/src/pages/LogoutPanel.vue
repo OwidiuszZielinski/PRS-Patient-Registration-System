@@ -19,6 +19,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import { store } from '@/store.js'
 
 const router = useRouter()
 const logoutSuccess = ref(false)
@@ -34,6 +35,9 @@ const handleLogout = async () => {
     localStorage.removeItem('jwt_token')
     localStorage.removeItem('username')
     localStorage.removeItem('role')
+    
+    // Wyczyść store
+    store.clearUser()
     
     // Usuń domyślny nagłówek Authorization
     delete axios.defaults.headers.common['Authorization']

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { createApp, h, ref, onMounted } from 'vue'
 import axios from 'axios'
+import { store } from '@/store.js'
 
 import Home from '@/pages/Home.vue'
 import WaitingRoom from '@/pages/WaitingRoom.vue'
@@ -47,7 +48,7 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-  const token = localStorage.getItem('jwt_token')
+  const token = store.user.token || localStorage.getItem('jwt_token')
   if (!token) {
     mountCountdownBanner(
       'Need authentication.',
@@ -69,7 +70,7 @@ router.beforeEach(async (to, from, next) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
       // Sprawdzenie uprawnień na podstawie roli
-      const userRole = localStorage.getItem('role')
+      const userRole = store.user.role || localStorage.getItem('role')
       const allowedRoles = routePermissions[to.path]
       
       // Jeśli ścieżka nie jest zdefiniowana w uprawnieniach, pozwól na dostęp
@@ -89,6 +90,7 @@ router.beforeEach(async (to, from, next) => {
       localStorage.removeItem('jwt_token')
       localStorage.removeItem('username')
       localStorage.removeItem('role')
+      store.clearUser()
       mountCountdownBanner(
         'Authentication expired.',
         3,
@@ -101,6 +103,7 @@ router.beforeEach(async (to, from, next) => {
     localStorage.removeItem('jwt_token')
     localStorage.removeItem('username')
     localStorage.removeItem('role')
+    store.clearUser()
     mountCountdownBanner(
       'Authentication error.',
       3,

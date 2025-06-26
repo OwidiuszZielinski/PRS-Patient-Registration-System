@@ -60,6 +60,7 @@
 
 <script>
 import axios from 'axios'
+import { store } from '@/store.js'
 
 export default {
   name: 'Login',
@@ -98,6 +99,9 @@ export default {
         localStorage.setItem('email', email)
         localStorage.setItem('role', role)
         
+        // Aktualizacja store
+        store.updateUser({ token, username, email, role })
+        
         // Ustawienie domyślnego nagłówka Authorization dla wszystkich przyszłych żądań
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
@@ -131,6 +135,8 @@ export default {
           }
         })
         if (response.data) {
+          // Aktualizacja store z danymi z localStorage
+          store.refreshUserFromStorage()
           this.$router.push('/')
         }
       } catch (error) {
@@ -139,6 +145,7 @@ export default {
         localStorage.removeItem('username')
         localStorage.removeItem('email')
         localStorage.removeItem('role')
+        store.clearUser()
       }
     }
   }

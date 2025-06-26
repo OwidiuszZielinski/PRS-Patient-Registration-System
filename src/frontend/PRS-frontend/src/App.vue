@@ -56,6 +56,8 @@
 </template>
 
 <script>
+import { store } from '@/store.js'
+
 export default {
   name: 'App',
   data() {
@@ -65,7 +67,7 @@ export default {
   },
   computed: {
     userRole() {
-      return localStorage.getItem('role');
+      return store.user.role;
     }
   },
   methods: {

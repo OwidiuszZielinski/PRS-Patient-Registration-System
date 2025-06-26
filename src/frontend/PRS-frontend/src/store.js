@@ -14,7 +14,40 @@ export const store = reactive({
 
   currentVisit: null,
 
-  completedVisits: []
+  completedVisits: [],
+
+  // User management
+  user: {
+    role: localStorage.getItem('role') || null,
+    username: localStorage.getItem('username') || null,
+    email: localStorage.getItem('email') || null,
+    token: localStorage.getItem('jwt_token') || null
+  },
+
+  // Method to update user data
+  updateUser(userData) {
+    this.user = { ...this.user, ...userData }
+  },
+
+  // Method to clear user data (logout)
+  clearUser() {
+    this.user = {
+      role: null,
+      username: null,
+      email: null,
+      token: null
+    }
+  },
+
+  // Method to refresh user data from localStorage
+  refreshUserFromStorage() {
+    this.user = {
+      role: localStorage.getItem('role'),
+      username: localStorage.getItem('username'),
+      email: localStorage.getItem('email'),
+      token: localStorage.getItem('jwt_token')
+    }
+  }
 })
 
 export const avgWaitTime = computed(() => {
@@ -22,3 +55,6 @@ export const avgWaitTime = computed(() => {
   const sum = store.queue.reduce((a, t) => a + t.waitTime, 0)
   return Math.round(sum / store.queue.length)
 })
+
+// Initialize user data on store creation
+store.refreshUserFromStorage()
