@@ -75,7 +75,7 @@
         </div>
 
         <div class="info-text text-subtitle-1 mt-4">
-          {{ aiResponse || 'Ładuję dane…' }}
+          {{ aiResponse || 'Loading…' }}
         </div>
       </v-sheet>
     </div>
@@ -227,7 +227,6 @@ export default {
       creators: [
         'Owidiusz Zieliński',
         'Aleksandra Wrzesień',
-        'Aleksandra Wójcicka',
         'Michał Zaleśny'
       ],
       technologies: [

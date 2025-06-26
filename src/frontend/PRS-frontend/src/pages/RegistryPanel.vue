@@ -185,7 +185,9 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-btn type="submit" color="primary">Add Visit</v-btn>
+                  <v-btn type="submit" color="primary">
+                    {{ parseFloat(totalCost) > 0 ? 'Register and Pay' : 'Register' }}
+                  </v-btn>
                   <v-btn class="ml-2" @click="resetForm">Clear</v-btn>
                 </v-col>
               </v-row>

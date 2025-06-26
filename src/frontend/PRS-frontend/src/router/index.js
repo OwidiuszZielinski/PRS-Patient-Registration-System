@@ -11,6 +11,18 @@ import PatientVisitPanel from '@/pages/PatientVisitPanel.vue'
 import Register from '@/pages/Register.vue'
 import RedirectBanner from '@/components/RedirectBanner.vue'
 
+// Definicja uprawnień dla każdej ścieżki
+const routePermissions = {
+  '/': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/waiting-room': ['ADMIN', 'DOCTOR', 'WAITING_ROOM'],
+  '/doctor': ['ADMIN', 'DOCTOR'],
+  '/registry': ['ADMIN'],
+  '/logout': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/patient-view': ['ADMIN', 'PATIENT'],
+  '/register': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
+}
+
 const routes = [
   { path: '/', component: Home },
   { path: '/waiting-room', component: WaitingRoom },
@@ -19,7 +31,9 @@ const routes = [
   { path: '/logout', component: LogoutPanel },
   { path: '/patient-view', component: PatientVisitPanel },
   { path: '/register', component: Register },
-  { path: '/login', component: () => import('@/pages/Login.vue') }
+  { path: '/login', component: () => import('@/pages/Login.vue') },
+  // Catch-all route for undefined paths
+  { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
 const router = createRouter({
@@ -53,6 +67,23 @@ router.beforeEach(async (to, from, next) => {
     
     if (response.data) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
+      // Sprawdzenie uprawnień na podstawie roli
+      const userRole = localStorage.getItem('role')
+      const allowedRoles = routePermissions[to.path]
+      
+      // Jeśli ścieżka nie jest zdefiniowana w uprawnieniach, pozwól na dostęp
+      if (allowedRoles && !allowedRoles.includes(userRole)) {
+        // Użytkownik nie ma uprawnień do tej ścieżki
+        mountCountdownBanner(
+          `Access denied. This resource is not available for your role (${userRole}). Redirecting to home page...`,
+          5,
+          5000,
+          '/'
+        )
+        return
+      }
+      
       next()
     } else {
       localStorage.removeItem('jwt_token')
