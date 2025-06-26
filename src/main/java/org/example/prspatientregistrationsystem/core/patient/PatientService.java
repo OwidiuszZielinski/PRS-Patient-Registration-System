@@ -19,10 +19,23 @@ public class PatientService {
     }
 
     public void save(PatientDto patientDto) {
-        if (patientDto.identificationNumber().isEmpty()) {
-            throw new RuntimeException("identification number is null");
+        if (patientDto.identificationNumber() == null || patientDto.identificationNumber().isEmpty()) {
+            // For OAuth2 users, identification number might be empty initially
+            // Set a placeholder that can be updated later
+            var updatedPatientDto = PatientDto.builder()
+                    .id(patientDto.id())
+                    .firstname(patientDto.firstname())
+                    .lastname(patientDto.lastname())
+                    .email(patientDto.email())
+                    .phoneNumber(patientDto.phoneNumber())
+                    .identificationNumber("TEMP_" + System.currentTimeMillis())
+                    .birthDate(patientDto.birthDate())
+                    .appUser(patientDto.appUser())
+                    .build();
+            patientRepository.save(updatedPatientDto.toPatient());
+        } else {
+            patientRepository.save(patientDto.toPatient());
         }
-        patientRepository.save(patientDto.toPatient());
     }
 
     public PatientDto findById(Long id) {
