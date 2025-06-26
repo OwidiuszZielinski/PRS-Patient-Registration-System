@@ -90,11 +90,12 @@ export default {
         })
 
         // Zapisanie tokenu JWT
-        const { token, username, role } = response.data
+        const { token, username, email, role } = response.data
         
         // Zapisanie tokenu w localStorage
         localStorage.setItem('jwt_token', token)
         localStorage.setItem('username', username)
+        localStorage.setItem('email', email)
         localStorage.setItem('role', role)
         
         // Ustawienie domyślnego nagłówka Authorization dla wszystkich przyszłych żądań
@@ -136,6 +137,7 @@ export default {
         // Token jest nieprawidłowy, usuń go
         localStorage.removeItem('jwt_token')
         localStorage.removeItem('username')
+        localStorage.removeItem('email')
         localStorage.removeItem('role')
       }
     }

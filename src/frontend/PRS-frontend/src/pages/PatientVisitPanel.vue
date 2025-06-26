@@ -46,6 +46,21 @@
         <!-- Add Visit -->
         <v-window-item value="add">
           <v-card flat class="pa-4 mt-4">
+            <!-- Patient Info Alert -->
+            <v-alert
+              v-if="isPatient"
+              type="info"
+              dense
+              border="left"
+              colored-border
+              class="mb-4"
+            >
+              <div class="d-flex align-center">
+                <v-icon class="mr-2">mdi-account-check</v-icon>
+                <span>You are registered as: <strong>{{ currentPatientName }}</strong></span>
+              </div>
+            </v-alert>
+
             <v-form ref="appointmentForm" @submit.prevent="addAppointment">
               <v-row>
                 <v-col cols="12" md="6">
@@ -60,16 +75,6 @@
                   />
                 </v-col>
 
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newAppointment.patient"
-                    label="Patient"
-                    :readonly="isPatient"
-                    :disabled="isPatient"
-                    :rules="patientRules"
-                    placeholder="Enter patient name"
-                  />
-                </v-col>
 
                 <!-- Date of visit -->
                 <v-col cols="12" md="6">
@@ -123,6 +128,40 @@
                   />
                 </v-col>
 
+                <!-- Additional Services -->
+                <v-col cols="12">
+                  <v-card outlined class="pa-4">
+                    <v-card-title class="text-h6">
+                      <v-icon left>mdi-stethoscope</v-icon>
+                      Additional Services
+                    </v-card-title>
+                    <v-card-text>
+                      <v-row>
+                        <v-col 
+                          v-for="service in availableServices" 
+                          :key="service.id" 
+                          cols="12" 
+                          md="6" 
+                          lg="4"
+                        >
+                          <v-checkbox
+                            v-model="selectedServices"
+                            :value="service"
+                            :label="`${service.name} - ${service.price} PLN`"
+                            :hint="service.description"
+                            persistent-hint
+                            color="primary"
+                          />
+                        </v-col>
+                      </v-row>
+                      <v-divider class="my-4" />
+                      <div class="text-h6 text-right">
+                        Total Cost: <span class="font-weight-bold primary--text">{{ totalCost }} PLN</span>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+
                 <v-col cols="12">
                   <v-btn type="submit" color="primary">Register Visit</v-btn>
                   <v-btn class="ml-2" @click="resetForm">Clear</v-btn>
@@ -141,6 +180,25 @@
               :items-per-page="10"
               class="elevation-1"
             >
+              <template v-slot:item.selectedServices="{ item }">
+                <div v-if="item.selectedServices && item.selectedServices.length > 0">
+                  <v-chip
+                    v-for="service in item.selectedServices"
+                    :key="service.id"
+                    small
+                    color="primary"
+                    class="mr-1 mb-1"
+                  >
+                    {{ service.name }}
+                  </v-chip>
+                </div>
+                <span v-else class="text-grey">No services</span>
+              </template>
+              
+              <template v-slot:item.totalCost="{ item }">
+                <span class="font-weight-bold">{{ item.totalCost || 0 }} PLN</span>
+              </template>
+              
               <template v-slot:item.actions="{ item }">
                 <v-icon color="red" @click="deleteAppointment(item)">mdi-delete</v-icon>
               </template>
@@ -159,6 +217,7 @@
 <script>
 import doctorService from '@/services/DoctorService'
 import visitService from '@/services/VisitService.js'
+import serviceService from '@/services/ServiceService.js'
 import axios from 'axios'
 
 export default {
@@ -172,7 +231,9 @@ export default {
       myAppointments: [],
       currentPatientName: '',
       doctorRules: [v => !!v || 'Choose a doctor'],
-      patientRules: [v => !!v || 'Patient is required'],
+      patientRules: [
+        v => this.isPatient || !!v || 'Patient is required'
+      ],
       dateRules: [
         v => !!v || 'Date is required',
         v => /^\d{2}\/\d{2}\/\d{4}$/.test(v) || 'Invalid date format'
@@ -186,52 +247,57 @@ export default {
       snackbarText: '',
       snackbarColor: 'success',
       isPatient: false,
+      availableServices: [],
+      selectedServices: [],
     }
   },
   async mounted() {
     await this.loadDoctors()
     await this.loadMyAppointments()
     await this.setCurrentPatientName()
+    await this.loadAvailableServices()
   },
   methods: {
     async setCurrentPatientName() {
-      const username = localStorage.getItem('username')
+      const email = localStorage.getItem('email')
       const role = localStorage.getItem('role')
-      
-      // Only fetch patient data if the user is a patient
-      if (role === 'PATIENT') {
+
+      if (role === 'PATIENT' && email) {
         try {
-          const response = await axios.get(`http://localhost:8080/api/patient/by-email/${username}`)
+          const response = await axios.get(`http://localhost:8080/api/patient/by-email/${email}`)
           const patient = response.data
-          this.currentPatientName = `${patient.firstname} ${patient.lastname}`
-          this.newAppointment.patient = this.currentPatientName
-          this.isPatient = true
+          if (patient && patient.firstname && patient.lastname) {
+            this.currentPatientName = `${patient.firstname} ${patient.lastname}`
+            this.newAppointment.patient = this.currentPatientName
+            this.isPatient = true
+          } else {
+            this.currentPatientName = ''
+            this.newAppointment.patient = ''
+            this.isPatient = false
+          }
         } catch (error) {
-          console.error('Error fetching patient data:', error)
-          // Fallback to username if patient data not found
-          this.currentPatientName = username || 'Current User'
-          this.newAppointment.patient = this.currentPatientName
+          this.currentPatientName = ''
+          this.newAppointment.patient = ''
           this.isPatient = false
         }
       } else {
-        // For other roles, don't fill the patient field
         this.currentPatientName = ''
         this.newAppointment.patient = ''
         this.isPatient = false
       }
     },
-    
+
     async loadMyAppointments() {
       try {
         const res = await visitService.getVisits()
-        const username = localStorage.getItem('username')
+        const email = localStorage.getItem('email')
         const role = localStorage.getItem('role')
-        
+
         // Filter appointments based on user role
         if (role === 'PATIENT') {
           // For patients, show only their own visits
           this.myAppointments = res.data
-            .filter(item => item.patient === username || item.patient === this.currentPatientName)
+            .filter(item => item.patient === email || item.patient === this.currentPatientName)
             .map(item => ({
               ...item,
               date: this.formatDateTime(item.date)
@@ -250,7 +316,7 @@ export default {
         this.notify('Error loading visits', 'error')
       }
     },
-    
+
     async loadDoctors() {
       try {
         const res = await doctorService.getDoctors()
@@ -269,6 +335,15 @@ export default {
       }
     },
 
+    async loadAvailableServices() {
+      try {
+        const res = await serviceService.getServices()
+        this.availableServices = res.data
+      } catch (error) {
+        this.notify('Error loading available services', 'error')
+      }
+    },
+
     async addAppointment() {
       try {
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
@@ -276,7 +351,9 @@ export default {
           doctorName: this.newAppointment.doctor,
           patient: this.newAppointment.patient,
           date: dateTime,
-          description: this.newAppointment.notes
+          description: this.newAppointment.notes,
+          selectedServices: this.selectedServices,
+          totalCost: this.totalCost
         }
         await visitService.addVisit(visitDto)
         this.notify('Visit registered successfully!', 'success')
@@ -328,6 +405,7 @@ export default {
       } else {
         this.newAppointment = {doctor: null, patient: '', date: null, time: '', notes: ''}
       }
+      this.selectedServices = []
       this.$refs.appointmentForm.resetValidation()
     },
 
@@ -355,8 +433,13 @@ export default {
         { title: 'Patient', key: 'patient', sortable: true },
         { title: 'Date', key: 'date', sortable: true },
         { title: 'Description', key: 'description', sortable: false },
+        { title: 'Services', key: 'selectedServices', sortable: false },
+        { title: 'Total Cost', key: 'totalCost', sortable: true },
         { title: 'Actions', key: 'actions', sortable: false }
       ]
+    },
+    totalCost() {
+      return this.selectedServices.reduce((sum, service) => sum + parseFloat(service.price), 0).toFixed(2)
     }
   }
 }
@@ -409,4 +492,12 @@ export default {
 .custom-tabs {
   margin-bottom: 20px;
 }
-</style> 
+
+.readonly-field {
+  background-color: #f5f5f5;
+}
+
+.readonly-field .v-field {
+  background-color: #f5f5f5 !important;
+}
+</style>

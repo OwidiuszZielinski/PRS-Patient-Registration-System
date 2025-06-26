@@ -146,11 +146,46 @@
                   <v-textarea
                     v-model="newAppointment.notes"
                     label="Description"
+                    placeholder="Please describe your symptoms or reason for visit"
                   />
                 </v-col>
 
+                <!-- Additional Services -->
                 <v-col cols="12">
-                  <v-btn type="submit" color="primary">Add a visit</v-btn>
+                  <v-card outlined class="pa-4">
+                    <v-card-title class="text-h6">
+                      <v-icon left>mdi-stethoscope</v-icon>
+                      Additional Services
+                    </v-card-title>
+                    <v-card-text>
+                      <v-row>
+                        <v-col 
+                          v-for="service in availableServices" 
+                          :key="service.id" 
+                          cols="12" 
+                          md="6" 
+                          lg="4"
+                        >
+                          <v-checkbox
+                            v-model="selectedServices"
+                            :value="service"
+                            :label="`${service.name} - ${service.price} PLN`"
+                            :hint="service.description"
+                            persistent-hint
+                            color="primary"
+                          />
+                        </v-col>
+                      </v-row>
+                      <v-divider class="my-4" />
+                      <div class="text-h6 text-right">
+                        Total Cost: <span class="font-weight-bold primary--text">{{ totalCost }} PLN</span>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="12">
+                  <v-btn type="submit" color="primary">Add Visit</v-btn>
                   <v-btn class="ml-2" @click="resetForm">Clear</v-btn>
                 </v-col>
               </v-row>
@@ -167,6 +202,25 @@
               :items-per-page="10"
               class="elevation-1"
             >
+              <template v-slot:item.selectedServices="{ item }">
+                <div v-if="item.selectedServices && item.selectedServices.length > 0">
+                  <v-chip
+                    v-for="service in item.selectedServices"
+                    :key="service.id"
+                    small
+                    color="primary"
+                    class="mr-1 mb-1"
+                  >
+                    {{ service.name }}
+                  </v-chip>
+                </div>
+                <span v-else class="text-grey">No services</span>
+              </template>
+              
+              <template v-slot:item.totalCost="{ item }">
+                <span class="font-weight-bold">{{ item.totalCost || 0 }} PLN</span>
+              </template>
+              
               <template v-slot:item.actions="{ item }">
                 <v-icon color="green" class="mr-2" @click="editAppointment(item)">mdi-pencil</v-icon>
                 <v-icon color="red" @click="deleteAppointment(item)">mdi-delete</v-icon>
@@ -386,6 +440,7 @@
 <script>
 import doctorService from '@/services/DoctorService'
 import visitService from '@/services/VisitService.js'
+import serviceService from '@/services/ServiceService.js'
 import DoctorSchedules from "@/components/DoctorSchedules.vue";
 import PatientHandler from "@/components/PatientHandler.vue";
 import patientService from "@/services/PatientService.js";
@@ -417,6 +472,8 @@ export default {
       patients: [],
       doctorsToEdit: [],
       appointments: [],
+      availableServices: [],
+      selectedServices: [],
       doctorRules: [v => !!v || 'Choose a doctor'],
       patientRules: [v => !!v || 'Enter the patient'],
       nameRules: [
@@ -452,64 +509,33 @@ export default {
         v => !!v || 'Time is required',
         v => /^(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$/.test(v) || 'Format HH:mm'
       ],
-      scheduleRules: [
-        v => !v || /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v) || 'Format HH:MM-HH:MM'
-      ],
-      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      scheduleDialog: false,
-      selectedDoctor: {id: null, fullName: '', schedule: {}},
+      snackbar: false,
+      snackbarText: '',
+      snackbarColor: 'success',
+      editDialog: false,
       editDoctorDialog: false,
+      editedAppointment: {
+        id: null,
+        doctor: '',
+        patient: '',
+        date: null,
+        time: '',
+        notes: ''
+      },
       editedDoctor: {
         id: null,
         firstName: '',
         lastName: '',
         licenseNumber: '',
         officeId: null
-      },
-      editDialog: false,
-      editedAppointment: {
-        id: null,
-        doctor: null,
-        patient: '',
-        date: null,
-        time: '',
-        notes: ''
-      },
-      snackbar: false,
-      snackbarText: '',
-      snackbarColor: 'success',
-    }
-  },
-  computed: {
-    appointmentHeaders() {
-      return [
-        {title: 'ID', key: 'id', align: 'start', sortable: true},
-        {title: 'Doctor', key: 'doctorName', align: 'start', sortable: true},
-        {title: 'Patient', key: 'patient', align: 'start', sortable: true},
-        {title: 'Date', key: 'date', align: 'start', sortable: true},
-        {title: 'Description', key: 'description', align: 'start', sortable: true},
-        {title: 'Actions', key: 'actions', align: 'end', sortable: false}
-      ]
-    },
-    doctorHeaders() {
-      return [
-        {title: 'Doctor ID', key: 'id', align: 'start', sortable: true},
-        {title: 'First Name', key: 'firstName', align: 'start', sortable: true},
-        {title: 'Last Name', key: 'lastName', align: 'start', sortable: true},
-        {title: 'License Number', key: 'licenseNumber', align: 'start', sortable: true},
-        {title: 'Office ID', key: 'officeId', align: 'start', sortable: true},
-        {title: 'Actions', key: 'actions', align: 'end', sortable: false}
-      ]
-    },
-
-    allowedMinutes(val) {
-      return val % 5 === 0;
+      }
     }
   },
   created() {
     this.loadAppointments()
     this.loadDoctors()
     this.loadPatients()
+    this.loadAvailableServices()
   },
   methods: {
     async loadPatients() {
@@ -559,7 +585,14 @@ export default {
         this.notify('Doctor loading error', 'error')
       }
     },
-
+    async loadAvailableServices() {
+      try {
+        const res = await serviceService.getServices()
+        this.availableServices = res.data
+      } catch (error) {
+        this.notify('Error loading available services', 'error')
+      }
+    },
     async addDoctor() {
       try {
         const doctorDto = {
@@ -567,13 +600,13 @@ export default {
           lastName: this.newDoctor.lastName,
           licenseNumber: this.newDoctor.licenseNumber,
           officeId: this.newDoctor.officeId
-        };
-        await doctorService.addDoctor(doctorDto);
-        this.notify('Doctor registered successfully!', 'success');
-        this.resetDoctorForm();
-        this.loadDoctors();
+        }
+        await doctorService.addDoctor(doctorDto)
+        this.notify('Doctor added successfully!', 'success')
+        this.resetDoctorForm()
+        this.loadDoctors()
       } catch (error) {
-        this.notify('Error registering doctor: ' + (error.response?.data?.message || error.message), 'error');
+        this.notify('Error while adding doctor: ' + (error.response?.data?.message || error.message), 'error')
       }
     },
     editDoctor(item) {
@@ -583,28 +616,19 @@ export default {
         lastName: item.lastName,
         licenseNumber: item.licenseNumber,
         officeId: item.officeId
-      };
-      this.editDoctorDialog = true;
+      }
+      this.editDoctorDialog = true
     },
-
     async updateDoctor() {
       try {
-        const dto = {
-          id: this.editedDoctor.id,
-          firstName: this.editedDoctor.firstName,
-          lastName: this.editedDoctor.lastName,
-          licenseNumber: this.editedDoctor.licenseNumber,
-          officeId: this.editedDoctor.officeId
-        };
-        await doctorService.updateDoctor(dto);
-        this.notify('Doctor updated successfully!', 'success');
-        this.editDoctorDialog = false;
-        this.loadDoctors();
+        await doctorService.updateDoctor(this.editedDoctor)
+        this.notify('Doctor updated successfully!', 'success')
+        this.editDoctorDialog = false
+        this.loadDoctors()
       } catch (error) {
-        this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error');
+        this.notify('Error updating doctor: ' + (error.response?.data?.message || error.message), 'error')
       }
     },
-
     async deleteDoctor(item) {
       try {
         await doctorService.delete(item.id)
@@ -622,7 +646,9 @@ export default {
           doctorName: this.newAppointment.doctor,
           patient: this.newAppointment.patient,
           date: dateTime,
-          description: this.newAppointment.notes
+          description: this.newAppointment.notes,
+          selectedServices: this.selectedServices,
+          totalCost: this.totalCost
         }
         await visitService.addVisit(visitDto)
         this.notify('Visit added successfully!', 'success')
@@ -690,6 +716,7 @@ export default {
 
     resetForm() {
       this.newAppointment = {doctor: null, patient: '', date: null, time: '', notes: ''}
+      this.selectedServices = []
       this.$refs.appointmentForm.resetValidation()
     },
 
@@ -743,6 +770,34 @@ export default {
       return `${day}/${month}/${year} ${hours}:${minutes}`
     },
 
+  },
+  computed: {
+    appointmentHeaders() {
+      return [
+        { title: 'Doctor', key: 'doctorName', sortable: true },
+        { title: 'Patient', key: 'patient', sortable: true },
+        { title: 'Date', key: 'date', sortable: true },
+        { title: 'Description', key: 'description', sortable: false },
+        { title: 'Services', key: 'selectedServices', sortable: false },
+        { title: 'Total Cost', key: 'totalCost', sortable: true },
+        { title: 'Actions', key: 'actions', sortable: false }
+      ]
+    },
+    doctorHeaders() {
+      return [
+        { title: 'First Name', key: 'firstName', sortable: true },
+        { title: 'Last Name', key: 'lastName', sortable: true },
+        { title: 'License Number', key: 'licenseNumber', sortable: true },
+        { title: 'Office ID', key: 'officeId', sortable: true },
+        { title: 'Actions', key: 'actions', sortable: false }
+      ]
+    },
+    totalCost() {
+      return this.selectedServices.reduce((sum, service) => sum + parseFloat(service.price), 0).toFixed(2)
+    },
+    allowedMinutes(val) {
+      return val % 5 === 0;
+    }
   }
 }
 </script>

@@ -26,6 +26,10 @@ public class DataInitializer implements ApplicationRunner {
             insertDoctors();
         }
 
+        if (isTableEmpty("service_entity")) {
+            insertServices();
+        }
+
         if (isTableEmpty("visit_entity")) {
             insertVisits();
         }
@@ -67,33 +71,52 @@ public class DataInitializer implements ApplicationRunner {
     private void insertDoctors() {
         jdbc.execute("""
             INSERT INTO doctor (first_name, office_id, last_name, license_number) VALUES
-            ('Jan', 1,  'Kowalski', 'DOC123456'),
-            ('Anna', 2, 'Nowak', 'DOC654321'),
-            ('Piotr', 3, 'Wiśniewski', 'DOC987654'),
-            ('Maria', 4, 'Wójcik', 'DOC456789'),
-            ('Andrzej', 5, 'Kowalczyk', 'DOC321654');
+            ('John', 1,  'Smith', 'DOC123456'),
+            ('Anna', 2, 'Johnson', 'DOC654321'),
+            ('Peter', 3, 'Williams', 'DOC987654'),
+            ('Mary', 4, 'Brown', 'DOC456789'),
+            ('Andrew', 5, 'Davis', 'DOC321654');
+        """);
+    }
+
+    private void insertServices() {
+        jdbc.execute("""
+            INSERT INTO service_entity (name, price, description) VALUES
+            ('ECG', 150.00, 'Electrocardiography - heart examination'),
+            ('Abdominal Ultrasound', 200.00, 'Ultrasonographic examination of the abdominal cavity'),
+            ('Cardiac Ultrasound', 250.00, 'Echocardiography - heart examination'),
+            ('Chest X-Ray', 120.00, 'Chest X-ray examination'),
+            ('Blood Test', 80.00, 'Basic laboratory blood tests'),
+            ('Urine Test', 60.00, 'Urine analysis'),
+            ('Spirometry', 100.00, 'Lung function test'),
+            ('ECG Holter', 300.00, '24-hour ECG monitoring'),
+            ('Blood Pressure Holter', 250.00, '24-hour blood pressure monitoring'),
+            ('Colonoscopy', 800.00, 'Endoscopic examination of the large intestine'),
+            ('Gastroscopy', 600.00, 'Endoscopic examination of the stomach'),
+            ('CT Scan', 1200.00, 'Computed tomography of selected body part'),
+            ('MRI Scan', 1500.00, 'Magnetic resonance imaging of selected body part');
         """);
     }
 
     private void insertVisits() {
         jdbc.execute("""
             INSERT INTO visit_entity (doctor_name, patient, date, description) VALUES
-            ('Anna Kowalska', 'Jan Nowak', '2025-06-01 10:00:00', 'Wizyta kontrolna'),
-            ('Piotr Zieliński', 'Maria Wiśniewska', '2025-06-02 11:30:00', 'Ból pleców'),
-            ('Katarzyna Wójcik', 'Tomasz Lewandowski', '2025-06-03 09:15:00', 'Wystawienie recepty'),
-            ('Michał Nowak', 'Anna Dąbrowska', '2025-06-04 14:00:00', 'Szczepienie'),
-            ('Ewa Kaczmarek', 'Paweł Kwiatkowski', '2025-06-05 08:45:00', 'Badania okresowe');
+            ('Anna Johnson', 'John Smith', '2025-06-01 10:00:00', 'Control visit'),
+            ('Peter Williams', 'Mary Brown', '2025-06-02 11:30:00', 'Back pain'),
+            ('Mary Brown', 'Thomas Wilson', '2025-06-03 09:15:00', 'Prescription'),
+            ('Andrew Davis', 'Anna Davis', '2025-06-04 14:00:00', 'Vaccination'),
+            ('John Smith', 'Paul Miller', '2025-06-05 08:45:00', 'Periodic examination');
         """);
     }
 
     private void insertPatients() {
         jdbc.execute("""
             INSERT INTO patient (first_name, last_name, email, phone_number, identification_number, birth_date) VALUES
-            ('Krzysztof',   'Jabłoński',   'krzysztof.jablonski@example.com',  '+48 506 789 012', '67890123456', '1980-05-15'),
-            ('Agnieszka',   'Piotrowska',  'agnieszka.piotrowska@example.com', '+48 507 890 123', '78901234567', '1985-07-22'),
-            ('Łukasz',      'Nowicki',     'lukasz.nowicki@example.com',       '+48 508 901 234', '89012345678', '1990-11-03'),
-            ('Katarzyna',   'Mazur',       'katarzyna.mazur@example.com',      '+48 509 012 345', '90123456789', '1978-02-28'),
-            ('Paweł',       'Szymański',   'pawel.szymański@example.com',      '+48 510 123 456', '01234567890', '1972-09-10');
+            ('Christopher',   'Johnson',   'christopher.johnson@example.com',  '+48 506 789 012', '67890123456', '1980-05-15'),
+            ('Agnes',   'Peters',  'agnes.peters@example.com', '+48 507 890 123', '78901234567', '1985-07-22'),
+            ('Luke',      'Wilson',     'luke.wilson@example.com',       '+48 508 901 234', '89012345678', '1990-11-03'),
+            ('Catherine',   'Miller',       'catherine.miller@example.com',      '+48 509 012 345', '90123456789', '1978-02-28'),
+            ('Paul',       'Davis',   'paul.davis@example.com',      '+48 510 123 456', '01234567890', '1972-09-10');
         """);
     }
 } 

@@ -32,10 +32,12 @@ public class AuthenticationService {
         
         AppUser appUser = appUserRepository.findByUsername(request.getUsername()).orElse(null);
         String role = appUser != null ? appUser.getRole().name() : "USER";
+        String email = appUser != null ? appUser.getEmail() : null;
         
         return AuthenticationResponse.builder()
                 .token(jwt)
                 .username(request.getUsername())
+                .email(email)
                 .role(role)
                 .build();
     }
