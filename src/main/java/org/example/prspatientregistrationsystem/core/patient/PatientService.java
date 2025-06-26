@@ -29,6 +29,12 @@ public class PatientService {
         return PatientDto.mapToPatientDto(findPatientById(id));
     }
 
+    public PatientDto findByEmail(String email) {
+        return patientRepository.findByEmail(email)
+                .map(PatientDto::mapToPatientDto)
+                .orElseThrow(() -> new NoSuchElementException("Patient with email %s not found".formatted(email)));
+    }
+
     public void delete(Long id) {
         patientRepository.deleteById(id);
     }

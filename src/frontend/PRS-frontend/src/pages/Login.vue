@@ -51,7 +51,7 @@
 
         <div class="register-link">
           <span>No account?</span>
-          <a href="/register">Sign up</a>
+          <a @click="$router.push('/register')" style="cursor: pointer;">Sign up</a>
         </div>
       </div>
     </div>
@@ -188,7 +188,7 @@ export default {
   height: 56px;
   padding: 0 15px 0 45px;
   border: 1px solid rgba(118, 74, 188, 0.5);
-  border-radius: 28px;
+  border-radius: 0px;
   font-size: 1rem;
   outline: none;
   transition: all 0.3s;
@@ -258,7 +258,7 @@ export default {
   background-color: #764abc;
   color: white;
   border: none;
-  border-radius: 28px;
+  border-radius: 0px;
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;

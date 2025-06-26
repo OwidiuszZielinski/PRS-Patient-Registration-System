@@ -13,6 +13,7 @@
       <v-btn rounded="lg" text to="/waiting-room" class="custom-btn">Waiting Room</v-btn>
       <v-btn rounded="lg" text to="/registry" class="custom-btn">Registration</v-btn>
       <v-btn rounded="lg" text to="/doctor" class="custom-btn">Doctor's office</v-btn>
+      <v-btn rounded="lg" text to="/patient-view" class="custom-btn">PatientView</v-btn>
       <v-btn rounded="lg" text to="/logout" class="custom-btn">Logout</v-btn>
 
     </v-app-bar>

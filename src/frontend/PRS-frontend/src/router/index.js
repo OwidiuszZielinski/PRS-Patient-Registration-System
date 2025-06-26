@@ -7,6 +7,8 @@ import WaitingRoom from '@/pages/WaitingRoom.vue'
 import DoctorPanel from '@/pages/DoctorPanel.vue'
 import RegistryPanel from '@/pages/RegistryPanel.vue'
 import LogoutPanel from '@/pages/LogoutPanel.vue'
+import PatientVisitPanel from '@/pages/PatientVisitPanel.vue'
+import Register from '@/pages/Register.vue'
 import RedirectBanner from '@/components/RedirectBanner.vue'
 
 const routes = [
@@ -15,6 +17,8 @@ const routes = [
   { path: '/doctor', component: DoctorPanel },
   { path: '/registry', component: RegistryPanel },
   { path: '/logout', component: LogoutPanel },
+  { path: '/patient-view', component: PatientVisitPanel },
+  { path: '/register', component: Register },
   { path: '/login', component: () => import('@/pages/Login.vue') }
 ]
 
@@ -24,7 +28,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.path === '/login') {
+  if (to.path === '/login' || to.path === '/register') {
     next()
     return
   }
