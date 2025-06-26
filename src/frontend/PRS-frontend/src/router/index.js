@@ -29,20 +29,43 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
+  const token = localStorage.getItem('jwt_token')
+  if (!token) {
+    mountCountdownBanner(
+      'Need authentication.',
+      3,
+      3000,
+      '/login'
+    )
+    return
+  }
+
   try {
-    const { data: isAuth } = await axios.get('http://localhost:8080/auth', { withCredentials: true })
-    if (!isAuth) {
+    const response = await axios.get('http://localhost:8080/api/v1/auth/validate', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (response.data) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      next()
+    } else {
+      localStorage.removeItem('jwt_token')
+      localStorage.removeItem('username')
+      localStorage.removeItem('role')
       mountCountdownBanner(
-        'Need authentication.',
+        'Authentication expired.',
         3,
         3000,
         '/login'
       )
-    } else {
-      next()
     }
   } catch (err) {
     console.error('Auth check failed:', err)
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('role')
     mountCountdownBanner(
       'Authentication error.',
       3,
@@ -66,6 +89,7 @@ function mountCountdownBanner(baseText, seconds, durationMs, redirectUrl) {
           remaining.value--
           if (remaining.value <= 0) {
             clearInterval(timer)
+            window.location.href = redirectUrl
           }
         }, 1000)
       })

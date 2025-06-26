@@ -79,31 +79,35 @@ export default {
       this.errorMessage = ''
       
       try {
-        // Tworzenie danych formularza do wysłania
-        const formData = new URLSearchParams()
-        formData.append('username', this.username)
-        formData.append('password', this.password)
-        if (this.rememberMe) {
-          formData.append('remember-me', 'on')
-        }
-
         // Wysyłanie żądania logowania do backendu
-        const response = await axios.post('http://localhost:8080/login', formData, {
-          withCredentials: true,
+        const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
+          username: this.username,
+          password: this.password
+        }, {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'application/json'
           }
         })
 
-        // Sprawdzenie czy logowanie się powiodło
-        if (response.status === 200) {
-          // Przekierowanie na stronę główną po udanym logowaniu
-          this.$router.push('/')
-        }
+        // Zapisanie tokenu JWT
+        const { token, username, role } = response.data
+        
+        // Zapisanie tokenu w localStorage
+        localStorage.setItem('jwt_token', token)
+        localStorage.setItem('username', username)
+        localStorage.setItem('role', role)
+        
+        // Ustawienie domyślnego nagłówka Authorization dla wszystkich przyszłych żądań
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+        // Przekierowanie na stronę główną po udanym logowaniu
+        this.$router.push('/')
       } catch (error) {
         console.error('Login error:', error)
         if (error.response && error.response.status === 401) {
           this.errorMessage = 'Username or password incorrect'
+        } else if (error.response && error.response.status === 400) {
+          this.errorMessage = 'Invalid credentials'
         } else {
           this.errorMessage = 'Login failed. Please try again.'
         }
@@ -116,7 +120,25 @@ export default {
     }
   },
   async mounted() {
-    // Usunięto sprawdzenie autoryzacji - router już to obsługuje
+    // Sprawdzenie czy użytkownik ma już token JWT
+    const token = localStorage.getItem('jwt_token')
+    if (token) {
+      try {
+        const response = await axios.get('http://localhost:8080/api/v1/auth/validate', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        if (response.data) {
+          this.$router.push('/')
+        }
+      } catch (error) {
+        // Token jest nieprawidłowy, usuń go
+        localStorage.removeItem('jwt_token')
+        localStorage.removeItem('username')
+        localStorage.removeItem('role')
+      }
+    }
   }
 }
 </script>

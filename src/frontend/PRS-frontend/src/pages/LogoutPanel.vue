@@ -30,9 +30,14 @@ const handleLogout = async () => {
   logoutError.value = ''
   
   try {
-    await axios.post('http://localhost:8080/logout', {}, {
-      withCredentials: true
-    })
+    // Usuń token JWT z localStorage
+    localStorage.removeItem('jwt_token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('role')
+    
+    // Usuń domyślny nagłówek Authorization
+    delete axios.defaults.headers.common['Authorization']
+    
     logoutSuccess.value = true
     setTimeout(() => {
       router.push('/login')

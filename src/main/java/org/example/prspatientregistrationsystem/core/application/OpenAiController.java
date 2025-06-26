@@ -5,8 +5,9 @@ import org.example.prspatientregistrationsystem.openai.OpenAiService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/ai")
 @RequiredArgsConstructor
+@RequestMapping("/api/ai")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class OpenAiController {
 
     private final OpenAiService openAiService;

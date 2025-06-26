@@ -295,11 +295,10 @@ export default {
     },
 
     async fetchWeather() {
-      const key = '5bdbb4c04b3e437e24390b30ac4dc569';
       const fetchByName = async name => {
         try {
-          const res = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-            params: {q: name, units: 'metric', lang: 'pl', appid: key}
+          const res = await axios.get('http://localhost:8080/api/weather/city', {
+            params: { city: name }
           });
           this.temperature = Math.round(res.data.main.temp)
           this.weather = {
@@ -314,8 +313,8 @@ export default {
       };
       const fetchCoords = async (lat, lon) => {
         try {
-          const res = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-            params: {lat, lon, units: 'metric', lang: 'pl', appid: key}
+          const res = await axios.get('http://localhost:8080/api/weather/coordinates', {
+            params: { lat, lon }
           });
           this.weather = {
             temp: Math.round(res.data.main.temp),
