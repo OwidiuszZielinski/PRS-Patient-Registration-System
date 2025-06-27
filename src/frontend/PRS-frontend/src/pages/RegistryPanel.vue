@@ -169,17 +169,13 @@
                           <v-checkbox
                             v-model="selectedServices"
                             :value="service"
-                            :label="`${service.name} - ${service.price} PLN`"
+                            :label="service.name"
                             :hint="service.description"
                             persistent-hint
                             color="primary"
                           />
                         </v-col>
                       </v-row>
-                      <v-divider class="my-4" />
-                      <div class="text-h6 text-right">
-                        Total Cost: <span class="font-weight-bold primary--text">{{ totalCost }} PLN</span>
-                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -217,10 +213,6 @@
                   </v-chip>
                 </div>
                 <span v-else class="text-grey">No services</span>
-              </template>
-              
-              <template v-slot:item.totalCost="{ item }">
-                <span class="font-weight-bold">{{ item.totalCost || 0 }} PLN</span>
               </template>
               
               <template v-slot:item.actions="{ item }">
@@ -781,7 +773,6 @@ export default {
         { title: 'Date', key: 'date', sortable: true },
         { title: 'Description', key: 'description', sortable: false },
         { title: 'Services', key: 'selectedServices', sortable: false },
-        { title: 'Total Cost', key: 'totalCost', sortable: true },
         { title: 'Actions', key: 'actions', sortable: false }
       ]
     },
