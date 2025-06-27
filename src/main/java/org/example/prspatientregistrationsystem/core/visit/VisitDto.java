@@ -23,16 +23,10 @@ public class VisitDto {
     public static VisitEntity mapToEntity(VisitDto visitDto) {
         List<ServiceEntity> services = null;
         if (visitDto.selectedServices != null) {
-            System.out.println("VisitDto.mapToEntity: selectedServices size: " + visitDto.selectedServices.size());
-            System.out.println("VisitDto.mapToEntity: selectedServices: " + visitDto.selectedServices);
             services = visitDto.selectedServices.stream()
                     .map(ServiceDto::mapToEntity)
                     .toList();
-            System.out.println("VisitDto.mapToEntity: mapped services size: " + services.size());
-        } else {
-            System.out.println("VisitDto.mapToEntity: selectedServices is null");
         }
-        
         return VisitEntity.create(
                 visitDto.doctorName,
                 visitDto.patient,
@@ -46,24 +40,19 @@ public class VisitDto {
     public static VisitDto mapToVisitDto(VisitEntity visitEntity) {
         List<ServiceDto> services = null;
         if (visitEntity.getSelectedServices() != null) {
-            System.out.println("VisitDto.mapToVisitDto: selectedServices size: " + visitEntity.getSelectedServices().size());
-            System.out.println("VisitDto.mapToVisitDto: selectedServices: " + visitEntity.getSelectedServices());
             services = visitEntity.getSelectedServices().stream()
                     .map(ServiceDto::mapToServiceDto)
                     .toList();
-            System.out.println("VisitDto.mapToVisitDto: mapped services size: " + services.size());
-        } else {
-            System.out.println("VisitDto.mapToVisitDto: selectedServices is null");
         }
-        
+
         return VisitDto.builder()
-            .id(visitEntity.getId())
-            .date(visitEntity.getDate())
-            .doctorName(visitEntity.getDoctorName())
-            .patient(visitEntity.getPatient())
-            .description(visitEntity.getDescription())
-            .selectedServices(services)
-            .totalCost(visitEntity.getTotalCost())
-            .build();
+                .id(visitEntity.getId())
+                .date(visitEntity.getDate())
+                .doctorName(visitEntity.getDoctorName())
+                .patient(visitEntity.getPatient())
+                .description(visitEntity.getDescription())
+                .selectedServices(services)
+                .totalCost(visitEntity.getTotalCost())
+                .build();
     }
 }

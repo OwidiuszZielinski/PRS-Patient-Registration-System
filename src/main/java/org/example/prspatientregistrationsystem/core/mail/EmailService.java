@@ -1,8 +1,6 @@
 package org.example.prspatientregistrationsystem.core.mail;
 
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -33,9 +31,8 @@ public class EmailService {
         }
     }
 
-    //Docelowa logika wysylka wiadomosci w dzien wizyty o 6 rano, aktualnie ustawione na minute po utworzeniu wizyty w celu sprwadzenia
     public void scheduleEmailInOneMinute(String to, String subject, String body) {
         scheduler.schedule(() -> sendEmail(to, subject, body), 1, TimeUnit.MINUTES);
         log.info("Send email to %s with before visit".formatted(to));
-     }
+    }
 }

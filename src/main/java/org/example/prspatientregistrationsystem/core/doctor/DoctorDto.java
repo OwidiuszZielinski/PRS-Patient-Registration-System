@@ -48,14 +48,14 @@ public record DoctorDto(
         return !this.doctorSchedules.isEmpty() ?
                 this.doctorSchedules.stream()
                         .map(dto -> DoctorSchedule.builder()
-                                    .id(dto.id())
-                                    .doctor(this.toDoctor())
-                                    .scheduleDate(dto.scheduleDate())
-                                    .isWorkingDay(dto.isWorkingDay())
-                                    .isVacation(dto.isVacation())
-                                    .startTime(dto.startTime())
-                                    .endTime(dto.endTime())
-                                    .build()
+                                .id(dto.id())
+                                .doctor(this.toDoctor())
+                                .scheduleDate(dto.scheduleDate())
+                                .isWorkingDay(dto.isWorkingDay())
+                                .isVacation(dto.isVacation())
+                                .startTime(dto.startTime())
+                                .endTime(dto.endTime())
+                                .build()
                         ).toList() : List.of();
     }
 }
@@ -77,13 +77,13 @@ record DoctorScheduleDto(
             id = employeeWorkSchedule.getDoctor().getDoctorId();
         }
         return DoctorScheduleDto.builder()
-            .id(employeeWorkSchedule.getId())
-            .doctorId(id)
-            .scheduleDate(employeeWorkSchedule.getScheduleDate())
-            .isWorkingDay(employeeWorkSchedule.isWorkingDay())
-            .isVacation(employeeWorkSchedule.isVacation())
-            .startTime(employeeWorkSchedule.getStartTime())
-            .endTime(employeeWorkSchedule.getEndTime())
+                .id(employeeWorkSchedule.getId())
+                .doctorId(id)
+                .scheduleDate(employeeWorkSchedule.getScheduleDate())
+                .isWorkingDay(employeeWorkSchedule.isWorkingDay())
+                .isVacation(employeeWorkSchedule.isVacation())
+                .startTime(employeeWorkSchedule.getStartTime())
+                .endTime(employeeWorkSchedule.getEndTime())
                 .build();
     }
 }

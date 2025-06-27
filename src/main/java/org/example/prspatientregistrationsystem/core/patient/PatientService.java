@@ -20,8 +20,6 @@ public class PatientService {
 
     public void save(PatientDto patientDto) {
         if (patientDto.identificationNumber() == null || patientDto.identificationNumber().isEmpty()) {
-            // For OAuth2 users, identification number might be empty initially
-            // Set a placeholder that can be updated later
             var updatedPatientDto = PatientDto.builder()
                     .id(patientDto.id())
                     .firstname(patientDto.firstname())
