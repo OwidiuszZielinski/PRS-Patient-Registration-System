@@ -11,6 +11,7 @@ import LogoutPanel from '@/pages/LogoutPanel.vue'
 import PatientVisitPanel from '@/pages/PatientVisitPanel.vue'
 import Register from '@/pages/Register.vue'
 import RedirectBanner from '@/components/RedirectBanner.vue'
+import PaymentStatus from '@/components/PaymentStatus.vue'
 
 // Definicja uprawnień dla każdej ścieżki
 const routePermissions = {
@@ -21,7 +22,8 @@ const routePermissions = {
   '/logout': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
   '/patient-view': ['ADMIN', 'PATIENT'],
   '/register': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
-  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
+  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
+  '/payment-status': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
 }
 
 const routes = [
@@ -33,6 +35,7 @@ const routes = [
   { path: '/patient-view', component: PatientVisitPanel },
   { path: '/register', component: Register },
   { path: '/login', component: () => import('@/pages/Login.vue') },
+  { path: '/payment-status', component: PaymentStatus },
   // Catch-all route for undefined paths
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]

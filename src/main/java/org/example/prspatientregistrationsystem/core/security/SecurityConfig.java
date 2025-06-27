@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 
@@ -30,6 +31,11 @@ public class SecurityConfig {
 
     private final AppUserService appUserService;
     private final JwtService jwtService;
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -81,6 +87,7 @@ public class SecurityConfig {
                     registry.requestMatchers("/api/v1/auth/**").permitAll();
                     registry.requestMatchers("/api/weather/**").permitAll();
                     registry.requestMatchers("/api/ai/**").permitAll();
+                    registry.requestMatchers("/api/payment/**").permitAll();
                     registry.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

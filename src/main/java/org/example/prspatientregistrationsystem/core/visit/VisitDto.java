@@ -29,7 +29,6 @@ public class VisitDto {
         }
         
         return new VisitEntity(
-                null,
                 visitDto.doctorName,
                 visitDto.patient,
                 visitDto.date,

@@ -163,10 +163,18 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-btn type="submit" color="primary">
+                  <v-btn 
+                    type="submit" 
+                    color="primary" 
+                    :loading="isProcessingPayment"
+                    :disabled="isProcessingPayment"
+                  >
+                    <v-icon left v-if="!isProcessingPayment">
+                      {{ parseFloat(totalCost) > 0 ? 'mdi-credit-card' : 'mdi-calendar-check' }}
+                    </v-icon>
                     {{ parseFloat(totalCost) > 0 ? 'Register and Pay' : 'Register' }}
                   </v-btn>
-                  <v-btn class="ml-2" @click="resetForm">Clear</v-btn>
+                  <v-btn class="ml-2" @click="resetForm" :disabled="isProcessingPayment">Clear</v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -212,6 +220,62 @@
       <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" bottom>
         {{ snackbarText }}
       </v-snackbar>
+
+      <!-- Payment Status Dialog -->
+      <v-dialog v-model="paymentDialog" persistent max-width="400">
+        <v-card>
+          <v-card-title class="text-h5">
+            <v-icon left :color="paymentStatus === 'success' ? 'success' : 'error'">
+              {{ paymentStatus === 'success' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
+            </v-icon>
+            Payment Status
+          </v-card-title>
+          
+          <v-card-text>
+            <div v-if="paymentStatus === 'success'" class="text-center">
+              <p class="text-h6 success--text mb-4">Payment Completed Successfully!</p>
+              <p>Your visit has been registered and payment has been processed.</p>
+              <p class="text-caption">You will be redirected to your visits list.</p>
+            </div>
+            
+            <div v-else-if="paymentStatus === 'failure'" class="text-center">
+              <p class="text-h6 error--text mb-4">Payment Failed</p>
+              <p>Unfortunately, the payment could not be processed.</p>
+              <p class="text-caption">Please try registering your visit again.</p>
+            </div>
+            
+            <div v-else class="text-center">
+              <v-progress-circular indeterminate color="primary" class="mb-4"></v-progress-circular>
+              <p class="text-h6 mb-4">Processing Payment...</p>
+              <p>Please wait while we verify your payment status.</p>
+            </div>
+          </v-card-text>
+          
+          <v-card-actions class="justify-center">
+            <v-btn 
+              v-if="paymentStatus === 'success'" 
+              color="success" 
+              @click="handlePaymentSuccess"
+            >
+              Continue
+            </v-btn>
+            <v-btn 
+              v-else-if="paymentStatus === 'failure'" 
+              color="error" 
+              @click="handlePaymentFailure"
+            >
+              Try Again
+            </v-btn>
+            <v-btn 
+              v-else 
+              color="primary" 
+              disabled
+            >
+              Processing...
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-container>
   </v-app>
 </template>
@@ -220,6 +284,7 @@
 import doctorService from '@/services/DoctorService'
 import visitService from '@/services/VisitService.js'
 import serviceService from '@/services/ServiceService.js'
+import paymentService from '@/services/PaymentService.js'
 import axios from 'axios'
 
 export default {
@@ -251,6 +316,10 @@ export default {
       isPatient: false,
       availableServices: [],
       selectedServices: [],
+      paymentDialog: false,
+      paymentStatus: '',
+      currentPaymentId: null,
+      isProcessingPayment: false,
     }
   },
   async mounted() {
@@ -258,8 +327,24 @@ export default {
     await this.loadMyAppointments()
     await this.setCurrentPatientName()
     await this.loadAvailableServices()
+    this.checkPaymentStatusFromUrl()
   },
   methods: {
+    checkPaymentStatusFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search)
+      const status = urlParams.get('status')
+      const paymentId = urlParams.get('paymentId')
+      
+      if (status && paymentId) {
+        this.currentPaymentId = paymentId
+        this.paymentStatus = status
+        this.paymentDialog = true
+        
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    },
+
     async setCurrentPatientName() {
       const email = localStorage.getItem('email')
       const role = localStorage.getItem('role')
@@ -347,7 +432,11 @@ export default {
     },
 
     async addAppointment() {
+      if (this.isProcessingPayment) return
+      
       try {
+        this.isProcessingPayment = true
+        
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
         const visitDto = {
           doctorName: this.newAppointment.doctor,
@@ -357,13 +446,86 @@ export default {
           selectedServices: this.selectedServices,
           totalCost: this.totalCost
         }
-        await visitService.addVisit(visitDto)
-        this.notify('Visit registered successfully!', 'success')
-        this.resetForm()
-        this.loadMyAppointments()
+
+        // Check if payment is needed
+        if (parseFloat(this.totalCost) > 0) {
+          // Use payment endpoint
+          const paymentResponse = await paymentService.addVisitWithPayment(visitDto)
+          
+          if (paymentResponse.data.status === 'SUCCESS') {
+            if (paymentResponse.data.redirectUrl) {
+              // Check if it's an external URL or our internal URL
+              if (paymentResponse.data.redirectUrl.startsWith('http://localhost:3000')) {
+                // Internal redirect - use router
+                this.$router.push(paymentResponse.data.redirectUrl.replace('http://localhost:3000', ''))
+              } else {
+                // External redirect to PayU - use window.location
+                this.notify('Redirecting to PayU payment gateway...', 'info')
+                setTimeout(() => {
+                  window.location.href = paymentResponse.data.redirectUrl
+                }, 1000)
+              }
+            } else {
+              // Payment not needed or already processed
+              this.notify('Visit registered successfully!', 'success')
+              this.resetForm()
+              this.loadMyAppointments()
+              this.tab = 'list'
+            }
+          } else {
+            // Payment failed - visit was not saved
+            this.notify('Payment failed: ' + paymentResponse.data.message + '. Visit was not registered.', 'error')
+          }
+        } else {
+          // No payment needed, use regular endpoint
+          await visitService.addVisit(visitDto)
+          this.notify('Visit registered successfully!', 'success')
+          this.resetForm()
+          this.loadMyAppointments()
+          this.tab = 'list'
+        }
       } catch (error) {
         this.notify('Error while registering visit: ' + (error.response?.data?.message || error.message), 'error')
+      } finally {
+        this.isProcessingPayment = false
       }
+    },
+
+    async checkPaymentStatus() {
+      if (!this.currentPaymentId) return
+      
+      try {
+        const response = await paymentService.getPaymentStatus(this.currentPaymentId)
+        const status = response.data.status
+        
+        if (status === 'COMPLETED' || status === 'SUCCESS') {
+          this.notify('Payment completed successfully!', 'success')
+          this.paymentDialog = false
+          this.loadMyAppointments()
+          this.tab = 'list'
+        } else if (status === 'CANCELED' || status === 'FAILED') {
+          this.notify('Payment failed or was canceled', 'error')
+          this.paymentDialog = false
+        } else {
+          // Still pending, check again in 2 seconds
+          setTimeout(() => this.checkPaymentStatus(), 2000)
+        }
+      } catch (error) {
+        this.notify('Error checking payment status', 'error')
+        this.paymentDialog = false
+      }
+    },
+
+    handlePaymentSuccess() {
+      this.notify('Payment completed successfully!', 'success')
+      this.paymentDialog = false
+      this.loadMyAppointments()
+      this.tab = 'list'
+    },
+
+    handlePaymentFailure() {
+      this.notify('Payment failed or was canceled. Please try again.', 'error')
+      this.paymentDialog = false
     },
 
     dateFormat(date) {
@@ -442,6 +604,13 @@ export default {
     },
     totalCost() {
       return this.selectedServices.reduce((sum, service) => sum + parseFloat(service.price), 0).toFixed(2)
+    }
+  },
+  watch: {
+    paymentDialog(newVal) {
+      if (newVal && this.currentPaymentId) {
+        this.checkPaymentStatus()
+      }
     }
   }
 }

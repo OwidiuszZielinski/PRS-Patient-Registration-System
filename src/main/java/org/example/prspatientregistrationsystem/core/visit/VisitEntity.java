@@ -35,4 +35,15 @@ public class VisitEntity {
     private List<ServiceEntity> selectedServices;
     
     private BigDecimal totalCost;
+
+    // Custom constructor for creating new visits
+    public VisitEntity(String doctorName, String patient, LocalDateTime date, String description, 
+                      List<ServiceEntity> selectedServices, BigDecimal totalCost) {
+        this.doctorName = doctorName;
+        this.patient = patient;
+        this.date = date;
+        this.description = description;
+        this.selectedServices = selectedServices;
+        this.totalCost = totalCost;
+    }
 }
