@@ -101,8 +101,16 @@ public class SecurityConfig {
                     registry.requestMatchers("/login/oauth2/code/**").permitAll();
                     registry.requestMatchers("/oauth2/authorization/**").permitAll();
                     registry.requestMatchers("/api/payment/**").permitAll();
+                    registry.requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                    ).permitAll();
                     registry.anyRequest().authenticated();
                 })
+
                 .oauth2Login(oauth2 -> oauth2
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(oAuth2UserService())

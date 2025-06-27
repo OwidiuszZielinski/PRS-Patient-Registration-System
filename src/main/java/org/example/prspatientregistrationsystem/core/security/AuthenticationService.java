@@ -1,10 +1,8 @@
 package org.example.prspatientregistrationsystem.core.security;
 
 import lombok.RequiredArgsConstructor;
-import org.example.prspatientregistrationsystem.core.patient.Patient;
-import org.example.prspatientregistrationsystem.core.patient.PatientRepository;
-import org.example.prspatientregistrationsystem.core.patient.dto.PatientDto;
 import org.example.prspatientregistrationsystem.core.patient.PatientService;
+import org.example.prspatientregistrationsystem.core.patient.dto.PatientDto;
 import org.example.prspatientregistrationsystem.core.security.dto.AuthenticationRequest;
 import org.example.prspatientregistrationsystem.core.security.dto.AuthenticationResponse;
 import org.example.prspatientregistrationsystem.core.security.dto.RegisterRequest;
@@ -32,46 +30,21 @@ public class AuthenticationService {
     private final PatientService patientService;
 
     public AuthenticationResponse register(RegisterRequest request) {
-        // Check if user already exists
         if (appUserRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
-        
+
         if (appUserRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
+        var appUser = buildAppUser(request);
+        var savedUser = appUserRepository.save(appUser);
 
-        // Create new user
-        AppUser appUser = new AppUser();
-        appUser.setUsername(request.getUsername());
-        appUser.setEmail(request.getEmail());
-        appUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        appUser.setRole(UserRole.PATIENT);
-        
-        AppUser savedUser = appUserRepository.save(appUser);
-
-        // Create patient
-        var patientDto = PatientDto.builder()
-                .firstname(request.getFirstName())
-                .lastname(request.getLastName())
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .identificationNumber(request.getIdentificationNumber())
-                .birthDate(request.getBirthDate() != null ? LocalDate.parse(request.getBirthDate()) : null)
-                .appUser(savedUser)
-                .build();
-        
+        var patientDto = buildPatient(request, savedUser);
         patientService.save(patientDto);
 
-        // Generate token
         final String jwt = jwtService.generateToken(savedUser);
-        
-        return AuthenticationResponse.builder()
-                .token(jwt)
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .role(savedUser.getRole().name())
-                .build();
+        return buildAuthenticationResponse(jwt, savedUser);
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -83,11 +56,11 @@ public class AuthenticationService {
         );
         final UserDetails user = userDetailsService.loadUserByUsername(request.getUsername());
         final String jwt = jwtService.generateToken(user);
-        
-        AppUser appUser = appUserRepository.findByUsername(request.getUsername()).orElse(null);
-        String role = appUser != null ? appUser.getRole().name() : "USER";
-        String email = appUser != null ? appUser.getEmail() : null;
-        
+
+        var appUser = appUserRepository.findByUsername(request.getUsername()).orElse(null);
+        var role = appUser != null ? appUser.getRole().name() : "USER";
+        var email = appUser != null ? appUser.getEmail() : null;
+
         return AuthenticationResponse.builder()
                 .token(jwt)
                 .username(request.getUsername())
@@ -107,5 +80,35 @@ public class AuthenticationService {
             return false;
         }
         return false;
+    }
+
+    private AppUser buildAppUser(RegisterRequest request) {
+        var appUser = new AppUser();
+        appUser.setUsername(request.getUsername());
+        appUser.setEmail(request.getEmail());
+        appUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        appUser.setRole(UserRole.PATIENT);
+        return appUser;
+    }
+
+    private static AuthenticationResponse buildAuthenticationResponse(String jwt, AppUser savedUser) {
+        return AuthenticationResponse.builder()
+                .token(jwt)
+                .username(savedUser.getUsername())
+                .email(savedUser.getEmail())
+                .role(savedUser.getRole().name())
+                .build();
+    }
+
+    private static PatientDto buildPatient(RegisterRequest request, AppUser savedUser) {
+        return PatientDto.builder()
+                .firstname(request.getFirstName())
+                .lastname(request.getLastName())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .identificationNumber(request.getIdentificationNumber())
+                .birthDate(request.getBirthDate() != null ? LocalDate.parse(request.getBirthDate()) : null)
+                .appUser(savedUser)
+                .build();
     }
 } 
