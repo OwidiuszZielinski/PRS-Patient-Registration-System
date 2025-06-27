@@ -320,6 +320,7 @@ export default {
       paymentStatus: '',
       currentPaymentId: null,
       isProcessingPayment: false,
+      paymentCheckAttempts: 0,
     }
   },
   async mounted() {
@@ -334,6 +335,12 @@ export default {
       const urlParams = new URLSearchParams(window.location.search)
       const status = urlParams.get('status')
       const paymentId = urlParams.get('paymentId')
+      const tabParam = urlParams.get('tab')
+      
+      // Handle tab parameter
+      if (tabParam && (tabParam === 'add' || tabParam === 'list')) {
+        this.tab = tabParam
+      }
       
       if (status && paymentId) {
         this.currentPaymentId = paymentId
@@ -342,6 +349,53 @@ export default {
         
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname)
+      } else if (paymentId) {
+        // If only paymentId is present (from PayU redirect), check payment status
+        // Note: paymentId in URL is actually visitId
+        this.checkPaymentAndCreateVisit(paymentId)
+      }
+    },
+    
+    async checkPaymentAndCreateVisit(visitId) {
+      try {
+        console.log('Checking payment and creating visit for visitId:', visitId)
+        
+        // Check payment status and create visit if successful
+        const response = await visitService.checkPaymentAndCreateVisit(visitId)
+        console.log('Payment check response:', response.data)
+        
+        if (response.data.status === 'SUCCESS') {
+          this.notify('Payment completed and visit created successfully!', 'success')
+          await this.loadMyAppointments()
+          this.tab = 'list'
+        } else if (response.data.status === 'PENDING') {
+          // Check if we should continue checking (limit to 30 attempts = 1 minute)
+          if (!this.paymentCheckAttempts) {
+            this.paymentCheckAttempts = 0
+          }
+          
+          if (this.paymentCheckAttempts < 30) {
+            this.paymentCheckAttempts++
+            this.notify(`Payment is still being processed... (attempt ${this.paymentCheckAttempts}/30)`, 'info')
+            // Check again in 2 seconds
+            setTimeout(() => this.checkPaymentAndCreateVisit(visitId), 2000)
+          } else {
+            this.notify('Payment check timeout. Please contact support if payment was completed.', 'warning')
+            this.paymentCheckAttempts = 0
+          }
+        } else if (response.data.status === 'ERROR') {
+          this.notify('Payment error: ' + (response.data.message || 'Unknown error'), 'error')
+          console.error('Payment error:', response.data)
+          this.paymentCheckAttempts = 0
+        } else {
+          this.notify('Payment status unknown: ' + response.data.status, 'warning')
+          console.warn('Unknown payment status:', response.data)
+          this.paymentCheckAttempts = 0
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error)
+        this.notify('Error checking payment status: ' + (error.response?.data?.message || error.message), 'error')
+        this.paymentCheckAttempts = 0
       }
     },
 

@@ -29,6 +29,13 @@ public class PaymentEntity {
     private String currency;
     private String status;
     private String description;
+    
+    // Visit data fields
+    private String doctorName;
+    private String visitDate;
+    private String visitDescription;
+    private String selectedServices;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     

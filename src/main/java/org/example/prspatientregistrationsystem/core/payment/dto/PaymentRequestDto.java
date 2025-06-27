@@ -20,4 +20,10 @@ public class PaymentRequestDto {
     private String currency = "PLN";
     private String successUrl;
     private String failureUrl;
+    
+    // Visit data fields
+    private String doctorName;
+    private String visitDate;
+    private String visitDescription;
+    private String selectedServices;
 } 

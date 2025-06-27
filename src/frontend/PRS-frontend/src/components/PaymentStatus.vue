@@ -107,11 +107,11 @@ export default {
     },
     
     goToVisits() {
-      this.$router.push('/patient-view?tab=list')
+      window.location.href = 'http://localhost:3000/patient-view?tab=list'
     },
     
     goToRegistration() {
-      this.$router.push('/patient-view?tab=add')
+      window.location.href = 'http://localhost:3000/patient-view?tab=add'
     }
   }
 }

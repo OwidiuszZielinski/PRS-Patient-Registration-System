@@ -14,5 +14,10 @@ export default {
   },
   update(visitDto) {
    return axios.post(`${BASE_URL}update`, visitDto);
+ },
+ 
+ checkPaymentAndCreateVisit(visitId) {
+   console.log('VisitService: Checking payment and creating visit for visitId:', visitId)
+   return axios.post(`${BASE_URL}check-payment-and-create-visit/${visitId}`);
  }
 }

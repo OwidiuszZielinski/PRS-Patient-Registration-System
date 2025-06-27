@@ -14,12 +14,15 @@ public class ServiceDto {
     private String description;
 
     public static ServiceEntity mapToEntity(ServiceDto serviceDto) {
-        return new ServiceEntity(
-                serviceDto.getId(),
-                serviceDto.getName(),
-                serviceDto.getPrice(),
-                serviceDto.getDescription()
-        );
+        System.out.println("ServiceDto.mapToEntity called with: " + serviceDto);
+        ServiceEntity entity = ServiceEntity.builder()
+                .id(serviceDto.getId())
+                .name(serviceDto.getName())
+                .price(serviceDto.getPrice())
+                .description(serviceDto.getDescription())
+                .build();
+        System.out.println("ServiceDto.mapToEntity created entity: " + entity);
+        return entity;
     }
 
     public static ServiceDto mapToServiceDto(ServiceEntity serviceEntity) {

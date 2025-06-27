@@ -4,24 +4,32 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.prspatientregistrationsystem.core.payment.dto.PaymentRequestDto;
 import org.example.prspatientregistrationsystem.core.payment.dto.PaymentResponseDto;
+import org.example.prspatientregistrationsystem.core.visit.VisitDto;
+import org.example.prspatientregistrationsystem.core.visit.VisitService;
+import org.example.prspatientregistrationsystem.core.service.ServiceDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final RestTemplate restTemplate;
+    private final VisitService visitService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${payu.merchant.id:145227}")
     private String merchantId;
@@ -41,6 +49,14 @@ public class PaymentService {
     @Value("${payu.notify.url:http://localhost:8080/api/payment/callback}")
     private String notifyUrl;
 
+    public PaymentService(PaymentRepository paymentRepository, RestTemplate restTemplate, VisitService visitService) {
+        this.paymentRepository = paymentRepository;
+        this.restTemplate = restTemplate;
+        this.visitService = visitService;
+        // Configure ObjectMapper for better BigDecimal handling
+        this.objectMapper.findAndRegisterModules();
+    }
+
     public PaymentResponseDto createPayment(PaymentRequestDto paymentRequest) {
         try {
             log.info("Creating payment for visit: {}", paymentRequest.getVisitId());
@@ -58,8 +74,13 @@ public class PaymentService {
                     .currency(paymentRequest.getCurrency())
                     .status("PENDING")
                     .description(paymentRequest.getDescription())
+                    .doctorName(paymentRequest.getDoctorName())
+                    .visitDate(paymentRequest.getVisitDate())
+                    .visitDescription(paymentRequest.getVisitDescription())
+                    .selectedServices(paymentRequest.getSelectedServices())
                     .build();
             
+            log.info("Saving payment entity with selectedServices: {}", paymentEntity.getSelectedServices());
             paymentRepository.save(paymentEntity);
             log.info("Payment entity saved with ID: {}", paymentEntity.getId());
             
@@ -140,6 +161,14 @@ public class PaymentService {
         request.put("merchantPosId", posId);
         request.put("description", paymentRequest.getDescription());
         request.put("currencyCode", paymentRequest.getCurrency());
+        
+        // Add success and failure URLs
+        if (paymentRequest.getSuccessUrl() != null) {
+            request.put("continueUrl", paymentRequest.getSuccessUrl());
+        }
+        if (paymentRequest.getFailureUrl() != null) {
+            request.put("failureUrl", paymentRequest.getFailureUrl());
+        }
         
         // PayU expects amount in cents (multiply by 100)
         int amountInCents = paymentRequest.getAmount().multiply(new BigDecimal("100")).intValue();
@@ -278,16 +307,118 @@ public class PaymentService {
             
             log.info("Payment callback processed: orderId={}, status={}", orderId, status);
             
+            // If payment is successful, create the visit
+            if ("COMPLETED".equals(status) || "SUCCESS".equals(status)) {
+                createVisitFromPayment(payment);
+            }
+            
         } catch (Exception e) {
             log.error("Error processing payment callback", e);
             throw e;
         }
     }
     
+    private void createVisitFromPayment(PaymentEntity payment) {
+        try {
+            log.info("Creating visit from successful payment: {}", payment.getPaymentId());
+            log.info("Payment data: doctorName={}, patientName={}, visitDate={}, visitDescription={}, selectedServices={}, amount={}", 
+                    payment.getDoctorName(), payment.getPatientName(), payment.getVisitDate(), 
+                    payment.getVisitDescription(), payment.getSelectedServices(), payment.getAmount());
+            
+            // Validate payment data
+            if (payment.getDoctorName() == null || payment.getPatientName() == null) {
+                log.error("Payment data is incomplete: doctorName={}, patientName={}", 
+                        payment.getDoctorName(), payment.getPatientName());
+                return;
+            }
+            
+            // Parse selected services
+            List<ServiceDto> selectedServices = parseSelectedServices(payment.getSelectedServices());
+            log.info("Parsed selected services: {}", selectedServices);
+            
+            // Create VisitDto from payment data
+            VisitDto visitDto = VisitDto.builder()
+                    .doctorName(payment.getDoctorName())
+                    .patient(payment.getPatientName())
+                    .date(parseVisitDate(payment.getVisitDate()))
+                    .description(payment.getVisitDescription() != null ? payment.getVisitDescription() : "")
+                    .selectedServices(selectedServices)
+                    .totalCost(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO)
+                    .build();
+            
+            log.info("Created VisitDto: {}", visitDto);
+            
+            // Save the visit
+            Long visitId = visitService.addVisit(visitDto);
+            log.info("Visit created successfully with ID: {}", visitId);
+            
+        } catch (Exception e) {
+            log.error("Error creating visit from payment", e);
+        }
+    }
+    
+    private List<ServiceDto> parseSelectedServices(String selectedServices) {
+        try {
+            if (selectedServices != null && !selectedServices.isEmpty() && !"null".equals(selectedServices)) {
+                log.info("Parsing selected services in PaymentService: {}", selectedServices);
+                return objectMapper.readValue(selectedServices, new TypeReference<List<ServiceDto>>() {});
+            } else {
+                log.info("Selected services is null or empty in PaymentService, returning null");
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("Error parsing selected services in PaymentService: {}", e.getMessage());
+            log.error("Selected services string was: '{}'", selectedServices);
+            return null;
+        }
+    }
+    
+    private LocalDateTime parseVisitDate(String dateString) {
+        try {
+            log.info("Parsing visit date in PaymentService: '{}'", dateString);
+            
+            if (dateString != null && !dateString.isEmpty() && !"null".equals(dateString)) {
+                // Try different date formats
+                DateTimeFormatter[] formatters = {
+                    DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                };
+                
+                for (DateTimeFormatter formatter : formatters) {
+                    try {
+                        LocalDateTime parsedDate = LocalDateTime.parse(dateString, formatter);
+                        log.info("Successfully parsed date in PaymentService: {} using formatter: {}", parsedDate, formatter);
+                        return parsedDate;
+                    } catch (Exception ignored) {
+                        log.debug("Failed to parse date with formatter in PaymentService: {}", formatter);
+                    }
+                }
+                
+                log.warn("Could not parse date with any formatter in PaymentService, using current time");
+                return LocalDateTime.now();
+            } else {
+                log.info("Date string is null or empty in PaymentService, using current time");
+                return LocalDateTime.now(); // Default to current time if parsing fails
+            }
+        } catch (Exception e) {
+            log.error("Error parsing visit date in PaymentService: {}", e.getMessage());
+            return LocalDateTime.now();
+        }
+    }
+    
     public Map<String, Object> getPaymentStatus(String paymentId) {
         try {
             PaymentEntity payment = paymentRepository.findByPaymentId(paymentId)
-                    .orElseThrow(() -> new RuntimeException("Payment not found"));
+                    .orElse(null);
+            
+            if (payment == null) {
+                log.warn("Payment not found for paymentId: {}", paymentId);
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "Payment not found");
+                error.put("status", "NOT_FOUND");
+                return error;
+            }
             
             Map<String, Object> status = new HashMap<>();
             status.put("paymentId", payment.getPaymentId());
@@ -296,13 +427,161 @@ public class PaymentService {
             status.put("createdAt", payment.getCreatedAt());
             status.put("updatedAt", payment.getUpdatedAt());
             
+            log.info("Payment status for {}: {}", paymentId, payment.getStatus());
             return status;
             
         } catch (Exception e) {
-            log.error("Error getting payment status", e);
+            log.error("Error getting payment status for paymentId: {}", paymentId, e);
             Map<String, Object> error = new HashMap<>();
             error.put("error", e.getMessage());
+            error.put("status", "ERROR");
             return error;
+        }
+    }
+    
+    public Map<String, Object> getPaymentStatusByVisitId(String visitId) {
+        try {
+            log.info("Getting payment status by visitId: {}", visitId);
+            PaymentEntity payment = paymentRepository.findByVisitId(visitId)
+                    .orElse(null);
+            
+            if (payment == null) {
+                log.warn("Payment not found for visitId: {}", visitId);
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "Payment not found");
+                error.put("status", "NOT_FOUND");
+                return error;
+            }
+            
+            // Check if payment is still pending, try to get status from PayU
+            if ("PENDING".equals(payment.getStatus())) {
+                log.info("Payment is pending, checking status in PayU for paymentId: {}", payment.getPaymentId());
+                String payuStatus = checkPaymentStatusInPayU(payment.getPaymentId());
+                if (payuStatus != null && !"PENDING".equals(payuStatus)) {
+                    payment.setStatus(payuStatus);
+                    paymentRepository.save(payment);
+                    log.info("Updated payment status to: {}", payuStatus);
+                }
+            }
+            
+            Map<String, Object> status = new HashMap<>();
+            status.put("paymentId", payment.getPaymentId());
+            status.put("visitId", payment.getVisitId());
+            status.put("status", payment.getStatus());
+            status.put("amount", payment.getAmount());
+            status.put("createdAt", payment.getCreatedAt());
+            status.put("updatedAt", payment.getUpdatedAt());
+            
+            log.info("Payment status for visitId {}: {}", visitId, payment.getStatus());
+            return status;
+            
+        } catch (Exception e) {
+            log.error("Error getting payment status for visitId: {}", visitId, e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            error.put("status", "ERROR");
+            return error;
+        }
+    }
+    
+    private String checkPaymentStatusInPayU(String paymentId) {
+        try {
+            log.info("Checking payment status in PayU for paymentId: {}", paymentId);
+            
+            // Get access token
+            String accessToken = getAccessToken();
+            if (accessToken == null) {
+                log.error("Failed to get PayU access token for status check");
+                return null;
+            }
+            
+            // Prepare request to PayU
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + accessToken);
+            
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
+            // Query PayU for payment status
+            String statusUrl = payuApiUrl + "/api/v2_1/orders/" + paymentId;
+            log.info("Checking status at: {}", statusUrl);
+            
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    statusUrl,
+                    HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+            
+            log.info("PayU status response: {}", response.getBody());
+            
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                Map<String, Object> payuResponse = response.getBody();
+                
+                // PayU returns status in nested structure
+                // First check if there are orders
+                if (payuResponse.containsKey("orders") && payuResponse.get("orders") instanceof List) {
+                    List<Map<String, Object>> orders = (List<Map<String, Object>>) payuResponse.get("orders");
+                    if (!orders.isEmpty()) {
+                        Map<String, Object> order = orders.get(0);
+                        if (order.containsKey("status")) {
+                            String status = (String) order.get("status");
+                            log.info("PayU returned status: {}", status);
+                            return status;
+                        }
+                    }
+                }
+                
+                // Fallback: check if status is directly in response
+                if (payuResponse.containsKey("status")) {
+                    Object statusObj = payuResponse.get("status");
+                    if (statusObj instanceof String) {
+                        String status = (String) statusObj;
+                        log.info("PayU returned status (direct): {}", status);
+                        return status;
+                    } else if (statusObj instanceof Map) {
+                        Map<String, Object> statusMap = (Map<String, Object>) statusObj;
+                        if (statusMap.containsKey("statusCode")) {
+                            String status = (String) statusMap.get("statusCode");
+                            log.info("PayU returned status (from statusCode): {}", status);
+                            return status;
+                        }
+                    }
+                }
+                
+                log.warn("Could not find status in PayU response structure");
+                return null;
+            } else {
+                log.warn("PayU status check failed: status={}, body={}", response.getStatusCode(), response.getBody());
+                return null;
+            }
+            
+        } catch (Exception e) {
+            log.error("Error checking payment status in PayU", e);
+            return null;
+        }
+    }
+    
+    public PaymentEntity getPaymentEntity(String paymentId) {
+        try {
+            return paymentRepository.findByPaymentId(paymentId)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Error getting payment entity", e);
+            return null;
+        }
+    }
+    
+    public PaymentEntity getPaymentEntityByVisitId(String visitId) {
+        try {
+            log.info("Looking for payment entity by visitId: {}", visitId);
+            PaymentEntity payment = paymentRepository.findByVisitId(visitId)
+                    .orElse(null);
+            log.info("Found payment entity: {}", payment);
+            return payment;
+        } catch (Exception e) {
+            log.error("Error getting payment entity by visitId", e);
+            return null;
         }
     }
 } 
