@@ -53,7 +53,6 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
         this.restTemplate = restTemplate;
         this.visitService = visitService;
-        // Configure ObjectMapper for better BigDecimal handling
         this.objectMapper.findAndRegisterModules();
     }
 
