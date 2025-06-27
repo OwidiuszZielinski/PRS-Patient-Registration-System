@@ -12,5 +12,4 @@ public record DoctorAddCommand(
         String licenseNumber,
         List<DoctorScheduleAddCommand> doctorSchedules
 ) {
-
 }

@@ -30,7 +30,6 @@ public class PaymentEntity {
     private String status;
     private String description;
     
-    // Visit data fields
     private String doctorName;
     private String visitDate;
     private String visitDescription;
