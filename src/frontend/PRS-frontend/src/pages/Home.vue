@@ -133,7 +133,7 @@
                   <v-row class="mt-6" justify="start" align="center" dense>
                     <v-col cols="auto">
                       <v-btn outlined rounded elevation="2" class="mx-2"
-                             href="https://github.com/OwidiuszZieliński/PRS-Patient-Registration-System"
+                             href="https://github.com/OwidiuszZielinski/PRS-Patient-Registration-System"
                              target="_blank">
                         <v-icon left>mdi-github</v-icon>
                         GitHub
