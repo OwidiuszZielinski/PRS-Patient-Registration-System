@@ -34,6 +34,7 @@ public class PaymentEntity {
     private String doctorName;
     private String visitDate;
     private String visitDescription;
+    @Column(length = 2000)
     private String selectedServices;
     
     private LocalDateTime createdAt;

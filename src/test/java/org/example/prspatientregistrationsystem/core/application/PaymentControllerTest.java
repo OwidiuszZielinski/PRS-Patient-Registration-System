@@ -3,6 +3,8 @@ package org.example.prspatientregistrationsystem.core.application;
 import org.example.prspatientregistrationsystem.core.payment.PaymentService;
 import org.example.prspatientregistrationsystem.core.payment.dto.PaymentRequestDto;
 import org.example.prspatientregistrationsystem.core.payment.dto.PaymentResponseDto;
+import org.example.prspatientregistrationsystem.core.payment.PaymentRepository;
+import org.example.prspatientregistrationsystem.core.payment.PaymentEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -23,6 +26,9 @@ class PaymentControllerTest {
 
     @Mock
     private PaymentService paymentService;
+
+    @Mock
+    private PaymentRepository paymentRepository;
 
     @InjectMocks
     private PaymentController paymentController;
@@ -105,30 +111,33 @@ class PaymentControllerTest {
     @Test
     void getPaymentStatus_ShouldReturnStatus_WhenPaymentExists() {
         String paymentId = "123";
-        Map<String, Object> status = new HashMap<>();
-        status.put("paymentId", paymentId);
-        status.put("status", "COMPLETED");
+        PaymentEntity payment = new PaymentEntity();
+        payment.setPaymentId(paymentId);
+        payment.setStatus("COMPLETED");
+        payment.setAmount(new java.math.BigDecimal("100.00"));
+        payment.setVisitId("visit-1");
+        payment.setPatientName("John Doe");
 
-        when(paymentService.getPaymentStatus(paymentId)).thenReturn(status);
+        when(paymentRepository.findByPaymentId(paymentId)).thenReturn(java.util.Optional.of(payment));
 
         ResponseEntity<Map<String, Object>> response = paymentController.getPaymentStatus(paymentId);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(status, response.getBody());
-        verify(paymentService, times(1)).getPaymentStatus(paymentId);
+        assertEquals(paymentId, response.getBody().get("paymentId"));
+        assertEquals("COMPLETED", response.getBody().get("status"));
+        verify(paymentRepository, times(1)).findByPaymentId(paymentId);
     }
 
     @Test
-    void getPaymentStatus_ShouldReturnBadRequest_WhenExceptionOccurs() {
+    void getPaymentStatus_ShouldReturnInternalServerError_WhenExceptionOccurs() {
         String paymentId = "123";
-
-        when(paymentService.getPaymentStatus(paymentId)).thenThrow(new RuntimeException("Status error"));
+        when(paymentRepository.findByPaymentId(paymentId)).thenThrow(new RuntimeException("Status error"));
 
         ResponseEntity<Map<String, Object>> response = paymentController.getPaymentStatus(paymentId);
 
         assertNotNull(response);
-        assertEquals(400, response.getStatusCodeValue());
-        assertNull(response.getBody());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCodeValue());
+        assertTrue(response.getBody().containsKey("error"));
     }
 } 

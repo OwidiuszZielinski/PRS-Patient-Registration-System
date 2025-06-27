@@ -66,7 +66,7 @@ class DoctorControllerTest {
 
     @Test
     void add_shouldCallAddService() {
-        DoctorAddCommand command = new DoctorAddCommand(9L, "Czesław", "Basen", "DOC974674", List.of());
+        DoctorAddCommand command = new DoctorAddCommand(9L, "Czesław", "Basen", "DOC974674" , List.of());
 
         doctorController.add(command);
 

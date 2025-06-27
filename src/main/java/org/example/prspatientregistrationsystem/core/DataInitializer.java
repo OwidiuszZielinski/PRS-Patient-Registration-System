@@ -39,12 +39,12 @@ public class DataInitializer implements ApplicationRunner {
         }
     }
 
-    private boolean isTableEmpty(String tableName) {
+    boolean isTableEmpty(String tableName) {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM " + tableName, Integer.class);
         return count == null || count == 0;
     }
 
-    private void createUniqueUsernameConstraint() {
+    void createUniqueUsernameConstraint() {
         String checkConstraint = """
             DO $$
             BEGIN

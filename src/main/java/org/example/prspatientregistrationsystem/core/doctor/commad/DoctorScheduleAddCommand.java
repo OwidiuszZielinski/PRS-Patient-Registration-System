@@ -4,10 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record DoctorScheduleAddCommand(
-        LocalDate scheduleDate,
-        boolean isWorkingDay,
-        boolean isVacation,
-        LocalTime startTime,
-        LocalTime endTime
-) {
-}
+    LocalDate scheduleDate,
+    boolean isWorkingDay,
+    boolean isVacation,
+    LocalTime startTime,
+    LocalTime endTime
+) {} 
