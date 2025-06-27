@@ -2,6 +2,7 @@ package org.example.prspatientregistrationsystem.core.patient.dto;
 
 import lombok.Builder;
 import org.example.prspatientregistrationsystem.core.patient.Patient;
+import org.example.prspatientregistrationsystem.core.user.AppUser;
 
 import java.time.LocalDate;
 
@@ -13,7 +14,8 @@ public record PatientDto(
         String email,
         String phoneNumber,
         String identificationNumber,
-        LocalDate birthDate
+        LocalDate birthDate,
+        AppUser appUser
 ) {
     public static PatientDto mapToPatientDto(Patient patient) {
         return PatientDto.builder()
@@ -24,18 +26,20 @@ public record PatientDto(
                 .phoneNumber(patient.getPhoneNumber())
                 .identificationNumber(patient.getIdentificationNumber())
                 .birthDate(patient.getBirthDate())
+                .appUser(patient.getAppUser())
                 .build();
     }
 
     public Patient toPatient() {
-        return new Patient(
-                null,
-                this.firstname,
-                this.lastname,
-                this.email,
-                this.phoneNumber,
-                this.identificationNumber,
-                this.birthDate
-        );
+        Patient patient = new Patient();
+        patient.setId(this.id);
+        patient.setFirstName(this.firstname);
+        patient.setLastName(this.lastname);
+        patient.setEmail(this.email);
+        patient.setPhoneNumber(this.phoneNumber);
+        patient.setIdentificationNumber(this.identificationNumber);
+        patient.setBirthDate(this.birthDate);
+        patient.setAppUser(this.appUser);
+        return patient;
     }
 }

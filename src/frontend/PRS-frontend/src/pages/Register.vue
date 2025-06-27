@@ -18,112 +18,112 @@
           <div class="form-row">
             <div class="input-field">
               <v-text-field
-                v-model="formData.username"
-                label="Username"
-                :rules="usernameRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
+                  v-model="formData.username"
+                  label="Username"
+                  :rules="usernameRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
               />
             </div>
             <div class="input-field">
               <v-text-field
-                v-model="formData.email"
-                label="Email"
-                :rules="emailRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="input-field">
-              <v-text-field
-                v-model="formData.firstName"
-                label="First Name"
-                :rules="nameRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
-              />
-            </div>
-            <div class="input-field">
-              <v-text-field
-                v-model="formData.lastName"
-                label="Last Name"
-                :rules="nameRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
+                  v-model="formData.email"
+                  label="Email"
+                  :rules="emailRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
               />
             </div>
           </div>
           <div class="form-row">
             <div class="input-field">
               <v-text-field
-                v-model="formData.phoneNumber"
-                label="Phone Number"
-                :rules="phoneRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
+                  v-model="formData.firstName"
+                  label="First Name"
+                  :rules="nameRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
               />
             </div>
             <div class="input-field">
               <v-text-field
-                v-model="formData.identificationNumber"
-                label="PESEL"
-                :rules="peselRules"
-                required
-                autocomplete="off"
-                outlined
-                dense
+                  v-model="formData.lastName"
+                  label="Last Name"
+                  :rules="nameRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-field">
+              <v-text-field
+                  v-model="formData.phoneNumber"
+                  label="Phone Number"
+                  :rules="phoneRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
+              />
+            </div>
+            <div class="input-field">
+              <v-text-field
+                  v-model="formData.identificationNumber"
+                  label="PESEL"
+                  :rules="peselRules"
+                  required
+                  autocomplete="off"
+                  outlined
+                  dense
               />
             </div>
           </div>
           <div class="input-field date-field">
             <input
-              type="date"
-              v-model="formData.birthDate"
-              required
-              autocomplete="off"
-              class="v-input__control v-input__slot"
-              style="width:100%;height:56px;background:#2a2a2a;color:#fff;border:1px solid rgba(118,74,188,0.5);border-radius:0;padding:0 15px;"
+                type="date"
+                v-model="formData.birthDate"
+                required
+                autocomplete="off"
+                class="v-input__control v-input__slot"
+                style="width:100%;height:56px;background:#2a2a2a;color:#fff;border:1px solid rgba(118,74,188,0.5);border-radius:0;padding:0 15px;"
             >
           </div>
           <div class="form-row password-row">
             <div class="input-field">
               <v-text-field
-                :type="showPassword ? 'text' : 'password'"
-                v-model="formData.password"
-                label="Password"
-                :rules="passwordRules"
-                required
-                autocomplete="new-password"
-                outlined
-                dense
-                :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                @click:append="showPassword = !showPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  v-model="formData.password"
+                  label="Password"
+                  :rules="passwordRules"
+                  required
+                  autocomplete="new-password"
+                  outlined
+                  dense
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  @click:append="showPassword = !showPassword"
               />
             </div>
             <div class="input-field">
               <v-text-field
-                :type="showConfirmPassword ? 'text' : 'password'"
-                v-model="formData.confirmPassword"
-                label="Confirm Password"
-                :rules="confirmPasswordRules"
-                required
-                autocomplete="new-password"
-                outlined
-                dense
-                :append-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                @click:append="showConfirmPassword = !showConfirmPassword"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  v-model="formData.confirmPassword"
+                  label="Confirm Password"
+                  :rules="confirmPasswordRules"
+                  required
+                  autocomplete="new-password"
+                  outlined
+                  dense
+                  :append-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  @click:append="showConfirmPassword = !showConfirmPassword"
               />
             </div>
           </div>
@@ -162,6 +162,7 @@ export default {
       showPassword: false,
       showConfirmPassword: false,
       isLoading: false,
+      isOAuthLoading: false,
       errorMessage: '',
       successMessage: '',
       usernameRules: [v => !!v || 'Username is required', v => (v && v.length >= 2) || 'Username must be at least 2 characters'],
@@ -212,6 +213,30 @@ export default {
         }
       } finally {
         this.isLoading = false
+      }
+    },
+    async handleGoogleOAuth() {
+      this.isOAuthLoading = true
+      try {
+        // Redirect to Google OAuth2
+        window.location.href = 'http://localhost:8080/oauth2/authorization/google'
+      } catch (error) {
+        console.error('Google OAuth2 error:', error)
+        this.errorMessage = 'Google OAuth2 connection failed. Please try again later.'
+      } finally {
+        this.isOAuthLoading = false
+      }
+    },
+    async handleGitHubOAuth() {
+      this.isOAuthLoading = true
+      try {
+        // Redirect to GitHub OAuth2
+        window.location.href = 'http://localhost:8080/oauth2/authorization/github'
+      } catch (error) {
+        console.error('GitHub OAuth2 error:', error)
+        this.errorMessage = 'GitHub OAuth2 connection failed. Please try again later.'
+      } finally {
+        this.isOAuthLoading = false
       }
     }
   }
@@ -383,6 +408,96 @@ export default {
   font-size: 0.9em;
   margin-top: 2px;
   margin-bottom: 8px;
+}
+
+.oauth-section {
+  margin-top: 30px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.oauth-divider {
+  position: relative;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.oauth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.oauth-divider span {
+  background-color: #212121;
+  padding: 0 15px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+}
+
+.oauth-buttons {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oauth-button {
+  width: 100%;
+  height: 48px;
+  border: 2px solid #ffffff;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: transparent;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.oauth-button:hover:not(:disabled) {
+  background-color: #ffffff;
+  color: #212121;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.oauth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.oauth-button.google-button:hover:not(:disabled) {
+  border-color: #4285F4;
+  background-color: #4285F4;
+  color: #ffffff;
+}
+
+.oauth-button.github-button:hover:not(:disabled) {
+  border-color: #333333;
+  background-color: #333333;
+  color: #ffffff;
+}
+
+.oauth-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

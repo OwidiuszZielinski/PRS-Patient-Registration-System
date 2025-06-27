@@ -112,7 +112,7 @@ public class DataInitializer implements ApplicationRunner {
     private void insertPatients() {
         jdbc.execute("""
             INSERT INTO patient (first_name, last_name, email, phone_number, identification_number, birth_date) VALUES
-            ('Christopher',   'Johnson',   'patient@example.com',  '+48 506 789 012', '67890123456', '1980-05-15'),
+            ('Christopher',   'Johnson',   'christopher.johnson@example.com',  '+48 506 789 012', '67890123456', '1980-05-15'),
             ('Agnes',   'Peters',  'agnes.peters@example.com', '+48 507 890 123', '78901234567', '1985-07-22'),
             ('Luke',      'Wilson',     'luke.wilson@example.com',       '+48 508 901 234', '89012345678', '1990-11-03'),
             ('Catherine',   'Miller',       'catherine.miller@example.com',      '+48 509 012 345', '90123456789', '1978-02-28'),

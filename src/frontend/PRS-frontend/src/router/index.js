@@ -10,6 +10,7 @@ import RegistryPanel from '@/pages/RegistryPanel.vue'
 import LogoutPanel from '@/pages/LogoutPanel.vue'
 import PatientVisitPanel from '@/pages/PatientVisitPanel.vue'
 import Register from '@/pages/Register.vue'
+import OAuth2Callback from '@/pages/OAuth2Callback.vue'
 import RedirectBanner from '@/components/RedirectBanner.vue'
 import PaymentStatus from '@/components/PaymentStatus.vue'
 
@@ -22,8 +23,7 @@ const routePermissions = {
   '/logout': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
   '/patient-view': ['ADMIN', 'PATIENT'],
   '/register': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
-  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM'],
-  '/payment-status': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
+  '/login': ['ADMIN', 'DOCTOR', 'PATIENT', 'WAITING_ROOM']
 }
 
 const routes = [
@@ -34,6 +34,7 @@ const routes = [
   { path: '/logout', component: LogoutPanel },
   { path: '/patient-view', component: PatientVisitPanel },
   { path: '/register', component: Register },
+  { path: '/oauth2-callback', component: OAuth2Callback },
   { path: '/login', component: () => import('@/pages/Login.vue') },
   { path: '/payment-status', component: PaymentStatus },
   // Catch-all route for undefined paths
@@ -46,7 +47,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.path === '/login' || to.path === '/register') {
+  if (to.path === '/login' || to.path === '/register' || to.path === '/oauth2-callback') {
     next()
     return
   }
@@ -56,7 +57,7 @@ router.beforeEach(async (to, from, next) => {
     mountCountdownBanner(
       'Need authentication.',
       3,
-      3000,
+      1000,
       '/login'
     )
     return
@@ -68,14 +69,14 @@ router.beforeEach(async (to, from, next) => {
         'Authorization': `Bearer ${token}`
       }
     })
-    
+
     if (response.data) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      
+
       // Sprawdzenie uprawnień na podstawie roli
       const userRole = store.user.role || localStorage.getItem('role')
       const allowedRoles = routePermissions[to.path]
-      
+
       // Jeśli ścieżka nie jest zdefiniowana w uprawnieniach, pozwól na dostęp
       if (allowedRoles && !allowedRoles.includes(userRole)) {
         // Użytkownik nie ma uprawnień do tej ścieżki
@@ -87,7 +88,7 @@ router.beforeEach(async (to, from, next) => {
         )
         return
       }
-      
+
       next()
     } else {
       localStorage.removeItem('jwt_token')
