@@ -60,10 +60,10 @@ public class PaymentService {
         try {
             log.info("Creating payment for visit: {}", paymentRequest.getVisitId());
             
-            // Generate unique payment ID
+            // Generuje unikalny ID płatności
             String paymentId = UUID.randomUUID().toString();
             
-            // Create payment entity
+            // Zapisuje dane płatności w bazie
             PaymentEntity paymentEntity = PaymentEntity.builder()
                     .paymentId(paymentId)
                     .visitId(paymentRequest.getVisitId())
@@ -83,7 +83,7 @@ public class PaymentService {
             paymentRepository.save(paymentEntity);
             log.info("Payment entity saved with ID: {}", paymentEntity.getId());
             
-            // Get access token
+            // Pobiera token OAuth2 do autoryzacji z PayU
             String accessToken = getAccessToken();
             if (accessToken == null) {
                 log.error("Failed to get PayU access token");
@@ -95,7 +95,7 @@ public class PaymentService {
             Map<String, Object> payuRequest = createPayURequest(paymentRequest, paymentId);
             log.info("PayU request prepared: {}", payuRequest);
             
-            // Send request to PayU
+            // Wysyła żądanie do PayU API
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + accessToken);
@@ -117,7 +117,7 @@ public class PaymentService {
                 Map<String, Object> payuResponse = response.getBody();
                 String redirectUrl = (String) payuResponse.get("redirectUri");
                 
-                // Update payment with PayU order ID
+                
                 if (payuResponse.containsKey("orderId")) {
                     paymentEntity.setPaymentId(payuResponse.get("orderId").toString());
                     paymentRepository.save(paymentEntity);
@@ -154,14 +154,14 @@ public class PaymentService {
         log.info("Creating PayU request with paymentRequest: currency={}, amount={}, description={}", 
                 paymentRequest.getCurrency(), paymentRequest.getAmount(), paymentRequest.getDescription());
         
-        // Basic order information
+       
         request.put("notifyUrl", notifyUrl);
         request.put("customerIp", "127.0.0.1");
         request.put("merchantPosId", posId);
         request.put("description", paymentRequest.getDescription());
         request.put("currencyCode", paymentRequest.getCurrency());
         
-        // Add success and failure URLs
+        // Adresy powrotu po płatności
         if (paymentRequest.getSuccessUrl() != null) {
             request.put("continueUrl", paymentRequest.getSuccessUrl());
         }
@@ -169,25 +169,25 @@ public class PaymentService {
             request.put("failureUrl", paymentRequest.getFailureUrl());
         }
         
-        // PayU expects amount in cents (multiply by 100)
+   
         int amountInCents = paymentRequest.getAmount().multiply(new BigDecimal("100")).intValue();
         request.put("totalAmount", amountInCents);
         
-        // Ext order ID
+       
         request.put("extOrderId", paymentId);
         
-        // Buyer information
+      
         Map<String, Object> buyer = new HashMap<>();
         buyer.put("email", paymentRequest.getPatientEmail());
         
-        // Split patient name into first and last name
+       
         String[] nameParts = paymentRequest.getPatientName().split(" ", 2);
         buyer.put("firstName", nameParts[0]);
         buyer.put("lastName", nameParts.length > 1 ? nameParts[1] : "");
         buyer.put("language", "pl");
         request.put("buyer", buyer);
         
-        // Products
+        // Lista produktów 
         Map<String, Object> product = new HashMap<>();
         product.put("name", paymentRequest.getDescription());
         product.put("unitPrice", amountInCents);
@@ -207,11 +207,11 @@ public class PaymentService {
         try {
             log.info("Getting PayU access token with client_id: {}", clientId);
             
-            // Try different OAuth endpoints for PayU sandbox
+           
             String tokenUrl = payuApiUrl + "/pl/standard/user/oauth/authorize";
             log.info("Token URL: {}", tokenUrl);
             
-            // Create form data manually
+            // Tworzy dane formularza
             String formData = String.format("grant_type=client_credentials&client_id=%s&client_secret=%s", 
                     clientId, clientSecret);
             
@@ -242,7 +242,7 @@ public class PaymentService {
             } else {
                 log.error("Failed to get access token: status={}, body={}", response.getStatusCode(), response.getBody());
                 
-                // Try alternative endpoint if first one fails
+                
                 String altTokenUrl = payuApiUrl + "/oauth/token";
                 log.info("Trying alternative token URL: {}", altTokenUrl);
                 
@@ -264,7 +264,7 @@ public class PaymentService {
                     }
                 }
                 
-                // Try third alternative endpoint
+                
                 String thirdTokenUrl = payuApiUrl + "/pl/standard/user/oauth/token";
                 log.info("Trying third alternative token URL: {}", thirdTokenUrl);
                 
@@ -306,7 +306,7 @@ public class PaymentService {
             
             log.info("Payment callback processed: orderId={}, status={}", orderId, status);
             
-            // If payment is successful, create the visit
+            // Jeśli płatność się powiodła, tworzy wizytę
             if ("COMPLETED".equals(status) || "SUCCESS".equals(status)) {
                 createVisitFromPayment(payment);
             }
@@ -324,18 +324,18 @@ public class PaymentService {
                     payment.getDoctorName(), payment.getPatientName(), payment.getVisitDate(), 
                     payment.getVisitDescription(), payment.getSelectedServices(), payment.getAmount());
             
-            // Validate payment data
+            // Walidacja danych płatności
             if (payment.getDoctorName() == null || payment.getPatientName() == null) {
                 log.error("Payment data is incomplete: doctorName={}, patientName={}", 
                         payment.getDoctorName(), payment.getPatientName());
                 return;
             }
             
-            // Parse selected services
+          
             List<ServiceDto> selectedServices = parseSelectedServices(payment.getSelectedServices());
             log.info("Parsed selected services: {}", selectedServices);
             
-            // Create VisitDto from payment data
+            // Tworzy DTO wizyty z danych płatności
             VisitDto visitDto = VisitDto.builder()
                     .doctorName(payment.getDoctorName())
                     .patient(payment.getPatientName())
@@ -347,7 +347,7 @@ public class PaymentService {
             
             log.info("Created VisitDto: {}", visitDto);
             
-            // Save the visit
+            // Zapisuje wizytę w systemie
             Long visitId = visitService.addVisit(visitDto);
             log.info("Visit created successfully with ID: {}", visitId);
             
@@ -377,7 +377,7 @@ public class PaymentService {
             log.info("Parsing visit date in PaymentService: '{}'", dateString);
             
             if (dateString != null && !dateString.isEmpty() && !"null".equals(dateString)) {
-                // Try different date formats
+               
                 DateTimeFormatter[] formatters = {
                     DateTimeFormatter.ISO_LOCAL_DATE_TIME,
                     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
@@ -398,7 +398,7 @@ public class PaymentService {
                 return LocalDateTime.now();
             } else {
                 log.info("Date string is null or empty in PaymentService, using current time");
-                return LocalDateTime.now(); // Default to current time if parsing fails
+                return LocalDateTime.now(); 
             }
         } catch (Exception e) {
             log.error("Error parsing visit date in PaymentService: {}", e.getMessage());
@@ -452,7 +452,7 @@ public class PaymentService {
                 return error;
             }
             
-            // Check if payment is still pending, try to get status from PayU
+            // Jeśli płatność jest pending, sprawdza status w PayU
             if ("PENDING".equals(payment.getStatus())) {
                 log.info("Payment is pending, checking status in PayU for paymentId: {}", payment.getPaymentId());
                 String payuStatus = checkPaymentStatusInPayU(payment.getPaymentId());
@@ -487,21 +487,21 @@ public class PaymentService {
         try {
             log.info("Checking payment status in PayU for paymentId: {}", paymentId);
             
-            // Get access token
+            // Pobiera token dostępu
             String accessToken = getAccessToken();
             if (accessToken == null) {
                 log.error("Failed to get PayU access token for status check");
                 return null;
             }
             
-            // Prepare request to PayU
+            // Przygotowuje żądanie do PayU
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + accessToken);
             
             HttpEntity<String> entity = new HttpEntity<>(headers);
             
-            // Query PayU for payment status
+            // Sprawdza status w PayU
             String statusUrl = payuApiUrl + "/api/v2_1/orders/" + paymentId;
             log.info("Checking status at: {}", statusUrl);
             
@@ -517,8 +517,8 @@ public class PaymentService {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> payuResponse = response.getBody();
                 
-                // PayU returns status in nested structure
-                // First check if there are orders
+                // PayU zwraca status w zagnieżdżonej strukturze
+
                 if (payuResponse.containsKey("orders") && payuResponse.get("orders") instanceof List) {
                     List<Map<String, Object>> orders = (List<Map<String, Object>>) payuResponse.get("orders");
                     if (!orders.isEmpty()) {
@@ -531,7 +531,7 @@ public class PaymentService {
                     }
                 }
                 
-                // Fallback: check if status is directly in response
+                // Fallback: sprawdza czy status jest bezpośrednio w odpowiedzi
                 if (payuResponse.containsKey("status")) {
                     Object statusObj = payuResponse.get("status");
                     if (statusObj instanceof String) {

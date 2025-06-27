@@ -40,6 +40,7 @@ public class VisitController {
         visitService.addVisit(visitDto);
     }
 
+    // Rejestruje wizytę z płatnością PayU
     @PostMapping("/with-payment")
     public ResponseEntity<Map<String, Object>> addVisitWithPayment(@RequestBody VisitDto visitDto) {
         if (visitDto.getTotalCost() == null || visitDto.getTotalCost().compareTo(BigDecimal.ZERO) <= 0) {
@@ -81,6 +82,7 @@ public class VisitController {
         visitService.update(visitDto);
     }
 
+    // Sprawdza status płatności i tworzy wizytę jeśli płatność się powiodła
     @PostMapping("/check-payment-and-create-visit/{visitId}")
     public ResponseEntity<Map<String, Object>> checkPaymentAndCreateVisit(@PathVariable String visitId) {
         try {
@@ -104,6 +106,7 @@ public class VisitController {
         }
     }
 
+    // Obsługuje różne statusy płatności
     private ResponseEntity<Map<String, Object>> handlePaymentStatus(String status, String visitId) {
         return switch (status) {
             case "NOT_FOUND", "ERROR" -> error("Payment not found or error occurred");
@@ -114,6 +117,7 @@ public class VisitController {
         };
     }
 
+    // Tworzy wizytę po potwierdzeniu płatności
     private ResponseEntity<Map<String, Object>> createVisitAfterSuccessfulPayment(String visitId) {
         PaymentEntity payment = paymentService.getPaymentEntityByVisitId(visitId);
         if (payment == null || payment.getDoctorName() == null || payment.getPatientName() == null) {
@@ -181,6 +185,7 @@ public class VisitController {
         }
     }
 
+    // Tworzy żądanie płatności do PayU z danymi wizyty
     private PaymentRequestDto buildPaymentRequest(VisitDto visitDto, String visitId, String selectedServicesJson) {
         return PaymentRequestDto.builder()
                 .visitId(visitId)

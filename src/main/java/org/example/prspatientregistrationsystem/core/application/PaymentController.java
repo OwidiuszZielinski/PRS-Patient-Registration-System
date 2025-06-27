@@ -32,6 +32,7 @@ public class PaymentController {
         return ResponseEntity.ok().build();
     }
 
+    // Pobiera status płatności po ID płatności
     @GetMapping("/status/{paymentId}")
     public ResponseEntity<Map<String, Object>> getPaymentStatus(@PathVariable String paymentId) {
         var payment = paymentRepository.findByPaymentId(paymentId)

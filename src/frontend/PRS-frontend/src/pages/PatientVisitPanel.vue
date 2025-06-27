@@ -331,6 +331,7 @@ export default {
     this.checkPaymentStatusFromUrl()
   },
   methods: {
+    // Sprawdza status płatności z URL po powrocie z PayU
     checkPaymentStatusFromUrl() {
       const urlParams = new URLSearchParams(window.location.search)
       const status = urlParams.get('status')
@@ -350,17 +351,17 @@ export default {
         // Clear URL parameters
         window.history.replaceState({}, document.title, window.location.pathname)
       } else if (paymentId) {
-        // If only paymentId is present (from PayU redirect), check payment status
-        // Note: paymentId in URL is actually visitId
+        // sprawdza status płatności
         this.checkPaymentAndCreateVisit(paymentId)
       }
     },
     
+    // Sprawdza status płatności i tworzy wizytę
     async checkPaymentAndCreateVisit(visitId) {
       try {
         console.log('Checking payment and creating visit for visitId:', visitId)
         
-        // Check payment status and create visit if successful
+        
         const response = await visitService.checkPaymentAndCreateVisit(visitId)
         console.log('Payment check response:', response.data)
         
@@ -369,7 +370,7 @@ export default {
           await this.loadMyAppointments()
           this.tab = 'list'
         } else if (response.data.status === 'PENDING') {
-          // Check if we should continue checking (limit to 30 attempts = 1 minute)
+          
           if (!this.paymentCheckAttempts) {
             this.paymentCheckAttempts = 0
           }
@@ -377,7 +378,7 @@ export default {
           if (this.paymentCheckAttempts < 30) {
             this.paymentCheckAttempts++
             this.notify(`Payment is still being processed... (attempt ${this.paymentCheckAttempts}/30)`, 'info')
-            // Check again in 2 seconds
+            
             setTimeout(() => this.checkPaymentAndCreateVisit(visitId), 2000)
           } else {
             this.notify('Payment check timeout. Please contact support if payment was completed.', 'warning')
@@ -485,6 +486,7 @@ export default {
       }
     },
 
+    // Rejestruje wizytę 
     async addAppointment() {
       if (this.isProcessingPayment) return
       
@@ -501,37 +503,37 @@ export default {
           totalCost: this.totalCost
         }
 
-        // Check if payment is needed
+        // Sprawdzenie czy płatność jest wymagana
         if (parseFloat(this.totalCost) > 0) {
-          // Use payment endpoint
+          // Użycie endpointu z płatnością
           const paymentResponse = await paymentService.addVisitWithPayment(visitDto)
           
           if (paymentResponse.data.status === 'SUCCESS') {
             if (paymentResponse.data.redirectUrl) {
-              // Check if it's an external URL or our internal URL
+              
               if (paymentResponse.data.redirectUrl.startsWith('http://localhost:3000')) {
-                // Internal redirect - use router
+                
                 this.$router.push(paymentResponse.data.redirectUrl.replace('http://localhost:3000', ''))
               } else {
-                // External redirect to PayU - use window.location
+                
                 this.notify('Redirecting to PayU payment gateway...', 'info')
                 setTimeout(() => {
                   window.location.href = paymentResponse.data.redirectUrl
                 }, 1000)
               }
             } else {
-              // Payment not needed or already processed
+              // Płatność nie wymagana lub już przetworzona
               this.notify('Visit registered successfully!', 'success')
               this.resetForm()
               this.loadMyAppointments()
               this.tab = 'list'
             }
           } else {
-            // Payment failed - visit was not saved
+            // Płatność nie powiodła się
             this.notify('Payment failed: ' + paymentResponse.data.message + '. Visit was not registered.', 'error')
           }
         } else {
-          // No payment needed, use regular endpoint
+          // Brak płatności, użycie zwykłego endpointu
           await visitService.addVisit(visitDto)
           this.notify('Visit registered successfully!', 'success')
           this.resetForm()
