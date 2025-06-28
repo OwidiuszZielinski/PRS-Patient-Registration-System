@@ -137,11 +137,11 @@
                     </v-card-title>
                     <v-card-text>
                       <v-row>
-                        <v-col 
-                          v-for="service in availableServices" 
-                          :key="service.id" 
-                          cols="12" 
-                          md="6" 
+                        <v-col
+                          v-for="service in availableServices"
+                          :key="service.id"
+                          cols="12"
+                          md="6"
                           lg="4"
                         >
                           <v-checkbox
@@ -163,9 +163,9 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-btn 
-                    type="submit" 
-                    color="primary" 
+                  <v-btn
+                    type="submit"
+                    color="primary"
                     :loading="isProcessingPayment"
                     :disabled="isProcessingPayment"
                   >
@@ -204,11 +204,11 @@
                 </div>
                 <span v-else class="text-grey">No services</span>
               </template>
-              
+
               <template v-slot:item.totalCost="{ item }">
                 <span class="font-weight-bold">{{ item.totalCost || 0 }} PLN</span>
               </template>
-              
+
               <template v-slot:item.actions="{ item }">
                 <v-icon color="red" @click="deleteAppointment(item)">mdi-delete</v-icon>
               </template>
@@ -230,45 +230,45 @@
             </v-icon>
             Payment Status
           </v-card-title>
-          
+
           <v-card-text>
             <div v-if="paymentStatus === 'success'" class="text-center">
               <p class="text-h6 success--text mb-4">Payment Completed Successfully!</p>
               <p>Your visit has been registered and payment has been processed.</p>
               <p class="text-caption">You will be redirected to your visits list.</p>
             </div>
-            
+
             <div v-else-if="paymentStatus === 'failure'" class="text-center">
               <p class="text-h6 error--text mb-4">Payment Failed</p>
               <p>Unfortunately, the payment could not be processed.</p>
               <p class="text-caption">Please try registering your visit again.</p>
             </div>
-            
+
             <div v-else class="text-center">
               <v-progress-circular indeterminate color="primary" class="mb-4"></v-progress-circular>
               <p class="text-h6 mb-4">Processing Payment...</p>
               <p>Please wait while we verify your payment status.</p>
             </div>
           </v-card-text>
-          
+
           <v-card-actions class="justify-center">
-            <v-btn 
-              v-if="paymentStatus === 'success'" 
-              color="success" 
+            <v-btn
+              v-if="paymentStatus === 'success'"
+              color="success"
               @click="handlePaymentSuccess"
             >
               Continue
             </v-btn>
-            <v-btn 
-              v-else-if="paymentStatus === 'failure'" 
-              color="error" 
+            <v-btn
+              v-else-if="paymentStatus === 'failure'"
+              color="error"
               @click="handlePaymentFailure"
             >
               Try Again
             </v-btn>
-            <v-btn 
-              v-else 
-              color="primary" 
+            <v-btn
+              v-else
+              color="primary"
               disabled
             >
               Processing...
@@ -290,13 +290,23 @@ import axios from 'axios'
 export default {
   name: 'PatientVisitPanel',
   data() {
+    const email = localStorage.getItem('email')
+    const role = localStorage.getItem('role')
+    let initialPatientName = ''
+
+    // Try to get patient name from localStorage if available
+    if (role === 'PATIENT' && email) {
+      // For now, use email as fallback, will be updated in setCurrentPatientName()
+      initialPatientName = email
+    }
+
     return {
-      tab: 'add',
+      tab: localStorage.getItem('patientVisitTab') || 'add',
       timePicker: false,
-      newAppointment: {doctor: null, patient: '', date: null, time: '', notes: ''},
+      newAppointment: {doctor: null, patient: initialPatientName, date: null, time: '', notes: ''},
       doctorsToEdit: [],
       myAppointments: [],
-      currentPatientName: '',
+      currentPatientName: initialPatientName,
       doctorRules: [v => !!v || 'Choose a doctor'],
       patientRules: [
         v => this.isPatient || !!v || 'Patient is required'
@@ -313,7 +323,7 @@ export default {
       snackbar: false,
       snackbarText: '',
       snackbarColor: 'success',
-      isPatient: false,
+      isPatient: role === 'PATIENT',
       availableServices: [],
       selectedServices: [],
       paymentDialog: false,
@@ -321,64 +331,94 @@ export default {
       currentPaymentId: null,
       isProcessingPayment: false,
       paymentCheckAttempts: 0,
+      isInitialized: false,
     }
   },
   async mounted() {
+    console.log('PatientVisitPanel mounted, initial tab:', this.tab)
+
+    // Load patient name first so it's available for filtering visits
+    await this.setCurrentPatientName()
+    console.log('After setCurrentPatientName, currentPatientName:', this.currentPatientName)
+
     await this.loadDoctors()
     await this.loadMyAppointments()
-    await this.setCurrentPatientName()
     await this.loadAvailableServices()
-    this.checkPaymentStatusFromUrl()
+
+    // Check URL parameters for tab override
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    console.log('URL tab parameter:', tabParam)
+    if (tabParam && (tabParam === 'add' || tabParam === 'list')) {
+      this.tab = tabParam
+      localStorage.setItem('patientVisitTab', tabParam)
+      console.log('Tab set from URL parameter to:', tabParam)
+    }
+
+    console.log('Final tab value:', this.tab)
+
+    if (!this.isInitialized) {
+      this.checkPaymentStatusFromUrl()
+      this.isInitialized = true
+    }
+  },
+  beforeRouteLeave(to, from, next) {
+    // Clear form data when leaving the page
+    this.resetForm()
+    // Only reset isInitialized if actually navigating away, not on refresh
+    if (to.path !== from.path) {
+      this.isInitialized = false
+    }
+    next()
   },
   methods: {
-    // Sprawdza status płatności z URL po powrocie z PayU
     checkPaymentStatusFromUrl() {
       const urlParams = new URLSearchParams(window.location.search)
       const status = urlParams.get('status')
       const paymentId = urlParams.get('paymentId')
       const tabParam = urlParams.get('tab')
-      
-      // Handle tab parameter
+
+      // Handle tab parameter only if it exists
       if (tabParam && (tabParam === 'add' || tabParam === 'list')) {
         this.tab = tabParam
+        localStorage.setItem('patientVisitTab', tabParam)
       }
-      
+
+      // Clear URL parameters immediately to prevent duplicate calls
+      if (status || paymentId || tabParam) {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+
       if (status && paymentId) {
         this.currentPaymentId = paymentId
         this.paymentStatus = status
         this.paymentDialog = true
-        
-        // Clear URL parameters
-        window.history.replaceState({}, document.title, window.location.pathname)
       } else if (paymentId) {
-        // sprawdza status płatności
+        // If only paymentId is present (from PayU redirect), check payment status
+        // Note: paymentId in URL is actually visitId
         this.checkPaymentAndCreateVisit(paymentId)
       }
     },
-    
-    // Sprawdza status płatności i tworzy wizytę
+
     async checkPaymentAndCreateVisit(visitId) {
       try {
         console.log('Checking payment and creating visit for visitId:', visitId)
-        
-        
+
         const response = await visitService.checkPaymentAndCreateVisit(visitId)
         console.log('Payment check response:', response.data)
-        
+
         if (response.data.status === 'SUCCESS') {
           this.notify('Payment completed and visit created successfully!', 'success')
           await this.loadMyAppointments()
           this.tab = 'list'
         } else if (response.data.status === 'PENDING') {
-          
           if (!this.paymentCheckAttempts) {
             this.paymentCheckAttempts = 0
           }
-          
+
           if (this.paymentCheckAttempts < 30) {
             this.paymentCheckAttempts++
             this.notify(`Payment is still being processed... (attempt ${this.paymentCheckAttempts}/30)`, 'info')
-            
             setTimeout(() => this.checkPaymentAndCreateVisit(visitId), 2000)
           } else {
             this.notify('Payment check timeout. Please contact support if payment was completed.', 'warning')
@@ -404,28 +444,40 @@ export default {
       const email = localStorage.getItem('email')
       const role = localStorage.getItem('role')
 
+      console.log('setCurrentPatientName called with:', { email, role })
+
       if (role === 'PATIENT' && email) {
         try {
           const response = await axios.get(`http://localhost:8080/api/patient/by-email/${email}`)
           const patient = response.data
+          console.log('Patient data from API:', patient)
+
           if (patient && patient.firstname && patient.lastname) {
             this.currentPatientName = `${patient.firstname} ${patient.lastname}`
             this.newAppointment.patient = this.currentPatientName
             this.isPatient = true
+            console.log('Patient name set to:', this.currentPatientName)
+            console.log('newAppointment.patient set to:', this.newAppointment.patient)
           } else {
-            this.currentPatientName = ''
-            this.newAppointment.patient = ''
-            this.isPatient = false
+            // If no patient name found, use email as fallback
+            this.currentPatientName = email
+            this.newAppointment.patient = email
+            this.isPatient = true
+            console.log('No patient name found, using email as fallback:', email)
           }
         } catch (error) {
-          this.currentPatientName = ''
-          this.newAppointment.patient = ''
-          this.isPatient = false
+          console.error('Error fetching patient data:', error)
+          // Use email as fallback
+          this.currentPatientName = email
+          this.newAppointment.patient = email
+          this.isPatient = true
+          console.log('Error fetching patient data, using email as fallback:', email)
         }
       } else {
         this.currentPatientName = ''
         this.newAppointment.patient = ''
         this.isPatient = false
+        console.log('Not a patient or no email')
       }
     },
 
@@ -435,11 +487,21 @@ export default {
         const email = localStorage.getItem('email')
         const role = localStorage.getItem('role')
 
-        // Filter appointments based on user role
+        console.log('Loading appointments for:', { email, role, currentPatientName: this.currentPatientName })
+        console.log('All visits from API:', res.data)
+
         if (role === 'PATIENT') {
           // For patients, show only their own visits
-          this.myAppointments = res.data
-            .filter(item => item.patient === email || item.patient === this.currentPatientName)
+          const filteredVisits = res.data.filter(item => {
+            const matchesEmail = item.patient === email
+            const matchesName = item.patient === this.currentPatientName
+            console.log(`Visit ${item.id}: patient="${item.patient}", matchesEmail=${matchesEmail}, matchesName=${matchesName}`)
+            return matchesEmail || matchesName
+          })
+
+          console.log('Filtered visits for patient:', filteredVisits)
+
+          this.myAppointments = filteredVisits
             .map(item => ({
               ...item,
               date: this.formatDateTime(item.date)
@@ -454,7 +516,10 @@ export default {
             }))
             .sort((a, b) => a.id - b.id)
         }
-      } catch {
+
+        console.log('Final appointments array:', this.myAppointments)
+      } catch (error) {
+        console.error('Error loading visits:', error)
         this.notify('Error loading visits', 'error')
       }
     },
@@ -486,13 +551,16 @@ export default {
       }
     },
 
-    // Rejestruje wizytę 
     async addAppointment() {
       if (this.isProcessingPayment) return
-      
+
+      // Additional check to prevent duplicate submissions
+      if (this.paymentCheckAttempts > 0) return
+
       try {
         this.isProcessingPayment = true
-        
+        this.paymentCheckAttempts = 1 // Set flag to prevent duplicate calls
+
         const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
         const visitDto = {
           doctorName: this.newAppointment.doctor,
@@ -503,37 +571,35 @@ export default {
           totalCost: this.totalCost
         }
 
-        // Sprawdzenie czy płatność jest wymagana
+        console.log('Creating visit with data:', {
+          newAppointment: this.newAppointment,
+          currentPatientName: this.currentPatientName,
+          visitDto: visitDto
+        })
+
         if (parseFloat(this.totalCost) > 0) {
-          // Użycie endpointu z płatnością
           const paymentResponse = await paymentService.addVisitWithPayment(visitDto)
-          
+
           if (paymentResponse.data.status === 'SUCCESS') {
             if (paymentResponse.data.redirectUrl) {
-              
               if (paymentResponse.data.redirectUrl.startsWith('http://localhost:3000')) {
-                
                 this.$router.push(paymentResponse.data.redirectUrl.replace('http://localhost:3000', ''))
               } else {
-                
                 this.notify('Redirecting to PayU payment gateway...', 'info')
                 setTimeout(() => {
                   window.location.href = paymentResponse.data.redirectUrl
                 }, 1000)
               }
             } else {
-              // Płatność nie wymagana lub już przetworzona
               this.notify('Visit registered successfully!', 'success')
               this.resetForm()
               this.loadMyAppointments()
               this.tab = 'list'
             }
           } else {
-            // Płatność nie powiodła się
             this.notify('Payment failed: ' + paymentResponse.data.message + '. Visit was not registered.', 'error')
           }
         } else {
-          // Brak płatności, użycie zwykłego endpointu
           await visitService.addVisit(visitDto)
           this.notify('Visit registered successfully!', 'success')
           this.resetForm()
@@ -544,16 +610,17 @@ export default {
         this.notify('Error while registering visit: ' + (error.response?.data?.message || error.message), 'error')
       } finally {
         this.isProcessingPayment = false
+        this.paymentCheckAttempts = 0 // Reset flag after completion
       }
     },
 
     async checkPaymentStatus() {
       if (!this.currentPaymentId) return
-      
+
       try {
         const response = await paymentService.getPaymentStatus(this.currentPaymentId)
         const status = response.data.status
-        
+
         if (status === 'COMPLETED' || status === 'SUCCESS') {
           this.notify('Payment completed successfully!', 'success')
           this.paymentDialog = false
@@ -563,7 +630,6 @@ export default {
           this.notify('Payment failed or was canceled', 'error')
           this.paymentDialog = false
         } else {
-          // Still pending, check again in 2 seconds
           setTimeout(() => this.checkPaymentStatus(), 2000)
         }
       } catch (error) {
@@ -622,11 +688,22 @@ export default {
       const role = localStorage.getItem('role')
       if (role === 'PATIENT') {
         this.newAppointment = {doctor: null, patient: this.currentPatientName, date: null, time: '', notes: ''}
+        console.log('Reset form for patient, patient set to:', this.currentPatientName)
       } else {
         this.newAppointment = {doctor: null, patient: '', date: null, time: '', notes: ''}
       }
       this.selectedServices = []
-      this.$refs.appointmentForm.resetValidation()
+      this.timePicker = false
+      this.isProcessingPayment = false
+      this.paymentCheckAttempts = 0
+      this.currentPaymentId = null
+      this.paymentStatus = ''
+      this.paymentDialog = false
+
+      // Reset form validation
+      if (this.$refs.appointmentForm) {
+        this.$refs.appointmentForm.resetValidation()
+      }
     },
 
     async deleteAppointment(item) {
@@ -667,6 +744,11 @@ export default {
       if (newVal && this.currentPaymentId) {
         this.checkPaymentStatus()
       }
+    },
+    tab(newVal, oldVal) {
+      console.log(`Tab changed from ${oldVal} to ${newVal}`)
+      // Save current tab to localStorage
+      localStorage.setItem('patientVisitTab', newVal)
     }
   }
 }
