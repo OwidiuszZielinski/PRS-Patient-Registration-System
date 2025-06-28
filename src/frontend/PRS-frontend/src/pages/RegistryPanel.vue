@@ -445,7 +445,7 @@ export default {
   data() {
     return {
       tab: 'patient',
-       timeMenu: false,
+      timeMenu: false,
       timePicker: false,
       editTimePicker: false,
       newAppointment: {doctor: null, patient: '', date: null, time: '', notes: ''},
@@ -514,7 +514,8 @@ export default {
         patient: '',
         date: null,
         time: '',
-        notes: ''
+        notes: '',
+        selectedServices: []
       },
       editedDoctor: {
         id: null,
@@ -555,6 +556,7 @@ export default {
         const res = await visitService.getVisits()
         this.appointments = res.data.map(item => ({
           ...item,
+          originalDate: item.date,
           date: this.formatDateTime(item.date)
         }))
           .sort((a, b) => a.id - b.id)
@@ -654,15 +656,47 @@ export default {
     },
 
     editAppointment(item) {
-      const date = new Date(item.date);
+      console.log('Original item.originalDate:', item.originalDate, typeof item.originalDate);
+      
+      // Parse the date and time properly from original date
+      let date;
+      let time = '';
+      
+      if (typeof item.originalDate === 'string') {
+        // If date is in ISO format "YYYY-MM-DDTHH:mm:ss", extract both date and time
+        if (item.originalDate.includes('T')) {
+          const [datePart, timePart] = item.originalDate.split('T');
+          const [year, month, day] = datePart.split('-');
+          date = new Date(year, month - 1, day); // month is 0-indexed
+          time = timePart.substring(0, 5); // Get HH:mm part
+          console.log('Parsed date from ISO string:', date, 'time:', time);
+        } else {
+          // If it's just a date without time
+          const [year, month, day] = item.originalDate.split('-');
+          date = new Date(year, month - 1, day);
+          time = '00:00';
+          console.log('Parsed date only from ISO string:', date);
+        }
+      } else {
+        date = new Date(item.originalDate);
+        time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        console.log('Parsed date from other format:', date, 'time:', time);
+      }
+      
+      // Format date as ISO string for v-date-input (YYYY-MM-DD)
+      const isoDate = date.toISOString().split('T')[0];
+      console.log('ISO date for v-date-input:', isoDate);
+      
       this.editedAppointment = {
         id: item.id,
         doctor: item.doctorName,
         patient: item.patient,
-        date: date,
-        time: `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`,
-        notes: item.description
+        date: isoDate, // Use ISO string format for v-date-input
+        time: time, // Use the extracted time
+        notes: item.description,
+        selectedServices: item.selectedServices || []
       };
+      console.log('Final editedAppointment:', this.editedAppointment);
       this.editDialog = true;
     },
 
@@ -674,7 +708,8 @@ export default {
           doctorName: this.editedAppointment.doctor,
           patient: this.editedAppointment.patient,
           date: dateTime,
-          description: this.editedAppointment.notes
+          description: this.editedAppointment.notes,
+          selectedServices: this.editedAppointment.selectedServices || []
         };
         await visitService.update(visitDto);
         this.notify('Visit updated successfully!', 'success');

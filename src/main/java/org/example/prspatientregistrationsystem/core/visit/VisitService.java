@@ -68,10 +68,15 @@ public class VisitService {
         toSave.setDoctorName(visitDto.getDoctorName());
         toSave.setDescription(visitDto.getDescription());
         toSave.setPatient(visitDto.getPatient());
-        toSave.setSelectedServices(visitDto.getSelectedServices() != null ?
-                visitDto.getSelectedServices().stream()
-                        .map(ServiceDto::mapToEntity)
-                        .toList() : null);
+        
+        // Handle selectedServices safely
+        if (visitDto.getSelectedServices() != null && !visitDto.getSelectedServices().isEmpty()) {
+            toSave.setSelectedServices(visitDto.getSelectedServices().stream()
+                    .map(ServiceDto::mapToEntity)
+                    .toList());
+        } else {
+            toSave.setSelectedServices(null);
+        }
     }
 
     private VisitEntity findById(Long id) {
@@ -79,6 +84,9 @@ public class VisitService {
     }
 
     private static BigDecimal calculateTotalCost(List<ServiceDto> services) {
+        if (services == null || services.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
         return services.stream()
                 .filter(service -> service != null && service.getPrice() != null)
                 .map(ServiceDto::getPrice)

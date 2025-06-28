@@ -275,6 +275,17 @@
             >
               Processing...
             </v-btn>
+            
+            <!-- Close button for all payment statuses -->
+            <v-btn
+              variant="outlined"
+              color="grey"
+              @click="closePaymentDialog"
+              class="ml-2"
+            >
+              <v-icon left>mdi-close</v-icon>
+              Close
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -876,6 +887,12 @@ export default {
       this.snackbarText = text
       this.snackbarColor = color
       this.snackbar = true
+    },
+
+    closePaymentDialog() {
+      this.paymentDialog = false
+      this.paymentStatus = ''
+      this.currentPaymentId = null
     },
   },
   computed: {
