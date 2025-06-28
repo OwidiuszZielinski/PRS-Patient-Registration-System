@@ -40,6 +40,16 @@ public class PaymentController {
         return ResponseEntity.ok(buildResponse(payment));
     }
 
+    // Pobiera płatność po ID wizyty
+    @GetMapping("/by-visit-id/{visitId}")
+    public ResponseEntity<PaymentEntity> getPaymentByVisitId(@PathVariable String visitId) {
+        var payment = paymentService.getPaymentByVisitId(visitId);
+        if (payment == null) {
+            throw new RuntimeException("Payment not found");
+        }
+        return ResponseEntity.ok(payment);
+    }
+
     private static Map<String, Object> buildResponse(PaymentEntity payment) {
         Map<String, Object> response = new HashMap<>();
         response.put("paymentId", payment.getPaymentId());

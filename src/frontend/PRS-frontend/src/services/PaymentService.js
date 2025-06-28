@@ -17,5 +17,10 @@ export default {
   // Rejestruje wizytę
   addVisitWithPayment(visitDto) {
     return axios.post(VISIT_URL + "with-payment", visitDto);
+  },
+
+  // Pobiera płatność po ID wizyty
+  getPaymentByVisitId(visitId) {
+    return axios.get(BASE_URL + "by-visit-id/" + visitId);
   }
 } 

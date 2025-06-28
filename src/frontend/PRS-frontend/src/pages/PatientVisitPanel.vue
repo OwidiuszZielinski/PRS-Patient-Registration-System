@@ -225,8 +225,8 @@
       <v-dialog v-model="paymentDialog" persistent max-width="400">
         <v-card>
           <v-card-title class="text-h5">
-            <v-icon left :color="paymentStatus === 'success' ? 'success' : 'error'">
-              {{ paymentStatus === 'success' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
+            <v-icon left :color="getPaymentStatusColor()">
+              {{ getPaymentStatusIcon() }}
             </v-icon>
             Payment Status
           </v-card-title>
@@ -238,10 +238,10 @@
               <p class="text-caption">You will be redirected to your visits list.</p>
             </div>
 
-            <div v-else-if="paymentStatus === 'failure'" class="text-center">
+            <div v-else-if="paymentStatus === 'failure' || paymentStatus === 'CANCELED'" class="text-center">
               <p class="text-h6 error--text mb-4">Payment Failed</p>
               <p>Unfortunately, the payment could not be processed.</p>
-              <p class="text-caption">Please try registering your visit again.</p>
+              <p class="text-caption">Payment was canceled or failed.</p>
             </div>
 
             <div v-else class="text-center">
@@ -260,11 +260,13 @@
               Continue
             </v-btn>
             <v-btn
-              v-else-if="paymentStatus === 'failure'"
-              color="error"
-              @click="handlePaymentFailure"
+              v-else-if="paymentStatus === 'failure' || paymentStatus === 'CANCELED'"
+              color="primary"
+              @click="retryPayment"
+              :loading="isRetryingPayment"
             >
-              Try Again
+              <v-icon left>mdi-refresh</v-icon>
+              Retry Payment
             </v-btn>
             <v-btn
               v-else
@@ -332,6 +334,9 @@ export default {
       isProcessingPayment: false,
       paymentCheckAttempts: 0,
       isInitialized: false,
+      isRetryingPayment: false,
+      // Store the last payment data for retry
+      lastPaymentData: null,
     }
   },
   async mounted() {
@@ -344,6 +349,18 @@ export default {
     await this.loadDoctors()
     await this.loadMyAppointments()
     await this.loadAvailableServices()
+
+    // Load payment data from localStorage if available
+    const storedPaymentData = localStorage.getItem('lastPaymentData')
+    if (storedPaymentData) {
+      try {
+        this.lastPaymentData = JSON.parse(storedPaymentData)
+        console.log('Loaded payment data from localStorage on mount:', this.lastPaymentData)
+      } catch (error) {
+        console.error('Error parsing stored payment data on mount:', error)
+        localStorage.removeItem('lastPaymentData')
+      }
+    }
 
     // Check URL parameters for tab override
     const urlParams = new URLSearchParams(window.location.search)
@@ -372,6 +389,84 @@ export default {
     next()
   },
   methods: {
+    getPaymentStatusColor() {
+      if (this.paymentStatus === 'success') return 'success'
+      if (this.paymentStatus === 'failure' || this.paymentStatus === 'CANCELED') return 'error'
+      return 'primary'
+    },
+
+    getPaymentStatusIcon() {
+      if (this.paymentStatus === 'success') return 'mdi-check-circle'
+      if (this.paymentStatus === 'failure' || this.paymentStatus === 'CANCELED') return 'mdi-alert-circle'
+      return 'mdi-progress-clock'
+    },
+
+    async retryPayment() {
+      // First try to get payment data from localStorage
+      const storedPaymentData = localStorage.getItem('lastPaymentData')
+      
+      if (storedPaymentData) {
+        try {
+          this.lastPaymentData = JSON.parse(storedPaymentData)
+          console.log('Loaded payment data from localStorage:', this.lastPaymentData)
+        } catch (error) {
+          console.error('Error parsing stored payment data:', error)
+          this.lastPaymentData = null
+        }
+      }
+
+      if (!this.lastPaymentData) {
+        // Try to get payment data from current form if available
+        if (this.newAppointment.doctor && this.newAppointment.patient) {
+          const dateTime = `${this.formatDateForBackend(this.newAppointment.date)}T${this.newAppointment.time}:00`
+          this.lastPaymentData = {
+            doctorName: this.newAppointment.doctor,
+            patient: this.newAppointment.patient,
+            date: dateTime,
+            description: this.newAppointment.notes,
+            selectedServices: this.selectedServices,
+            totalCost: this.totalCost
+          }
+          // Save to localStorage
+          localStorage.setItem('lastPaymentData', JSON.stringify(this.lastPaymentData))
+        } else {
+          this.notify('No payment data available for retry. Please fill in the form again.', 'error')
+          this.paymentDialog = false
+          this.tab = 'add'
+          return
+        }
+      }
+
+      this.isRetryingPayment = true
+      try {
+        console.log('Retrying payment with data:', this.lastPaymentData)
+        
+        const paymentResponse = await paymentService.addVisitWithPayment(this.lastPaymentData)
+
+        if (paymentResponse.data.status === 'SUCCESS') {
+          if (paymentResponse.data.redirectUrl) {
+            this.notify('Redirecting to PayU payment gateway...', 'info')
+            this.paymentDialog = false
+            setTimeout(() => {
+              window.location.href = paymentResponse.data.redirectUrl
+            }, 1000)
+          } else {
+            this.notify('Payment retry successful!', 'success')
+            this.paymentDialog = false
+            this.loadMyAppointments()
+            this.tab = 'list'
+          }
+        } else {
+          this.notify('Payment retry failed: ' + paymentResponse.data.message, 'error')
+        }
+      } catch (error) {
+        console.error('Payment retry error:', error)
+        this.notify('Error retrying payment: ' + (error.response?.data?.message || error.message), 'error')
+      } finally {
+        this.isRetryingPayment = false
+      }
+    },
+
     checkPaymentStatusFromUrl() {
       const urlParams = new URLSearchParams(window.location.search)
       const status = urlParams.get('status')
@@ -393,10 +488,43 @@ export default {
         this.currentPaymentId = paymentId
         this.paymentStatus = status
         this.paymentDialog = true
+        
+        // If status is failure or canceled, we need to get the payment data for retry
+        if (status === 'failure' || status === 'CANCELED') {
+          this.loadPaymentDataForRetry(paymentId)
+        }
       } else if (paymentId) {
         // If only paymentId is present (from PayU redirect), check payment status
         // Note: paymentId in URL is actually visitId
         this.checkPaymentAndCreateVisit(paymentId)
+      }
+    },
+
+    async loadPaymentDataForRetry(visitId) {
+      try {
+        // Get payment entity to extract the original payment data
+        const response = await paymentService.getPaymentByVisitId(visitId)
+        const payment = response.data
+        
+        if (payment) {
+          // Reconstruct the visit data from payment entity
+          this.lastPaymentData = {
+            doctorName: payment.doctorName,
+            patient: payment.patientName,
+            date: payment.visitDate,
+            description: payment.visitDescription || '',
+            selectedServices: payment.selectedServices ? JSON.parse(payment.selectedServices) : [],
+            totalCost: payment.amount
+          }
+          
+          // Save to localStorage for future retry
+          localStorage.setItem('lastPaymentData', JSON.stringify(this.lastPaymentData))
+          console.log('Payment data loaded and saved to localStorage:', this.lastPaymentData)
+        }
+      } catch (error) {
+        console.error('Error loading payment data for retry:', error)
+        // If we can't load the payment data, we'll show an error message
+        this.notify('Unable to load payment data for retry. Please try registering your visit again.', 'error')
       }
     },
 
@@ -411,6 +539,8 @@ export default {
           this.notify('Payment completed and visit created successfully!', 'success')
           await this.loadMyAppointments()
           this.tab = 'list'
+          // Clear payment data after successful payment
+          localStorage.removeItem('lastPaymentData')
         } else if (response.data.status === 'PENDING') {
           if (!this.paymentCheckAttempts) {
             this.paymentCheckAttempts = 0
@@ -425,8 +555,15 @@ export default {
             this.paymentCheckAttempts = 0
           }
         } else if (response.data.status === 'ERROR') {
-          this.notify('Payment error: ' + (response.data.message || 'Unknown error'), 'error')
-          console.error('Payment error:', response.data)
+          // Check if it's a CANCELED payment
+          if (response.data.paymentStatus === 'CANCELED') {
+            this.paymentStatus = 'CANCELED'
+            this.paymentDialog = true
+            this.notify('Payment was canceled. You can retry the payment.', 'warning')
+          } else {
+            this.notify('Payment error: ' + (response.data.message || 'Unknown error'), 'error')
+            console.error('Payment error:', response.data)
+          }
           this.paymentCheckAttempts = 0
         } else {
           this.notify('Payment status unknown: ' + response.data.status, 'warning')
@@ -578,6 +715,12 @@ export default {
         })
 
         if (parseFloat(this.totalCost) > 0) {
+          // Store payment data for potential retry
+          this.lastPaymentData = { ...visitDto }
+          
+          // Save payment data to localStorage for retry
+          localStorage.setItem('lastPaymentData', JSON.stringify(visitDto))
+          
           const paymentResponse = await paymentService.addVisitWithPayment(visitDto)
 
           if (paymentResponse.data.status === 'SUCCESS') {
@@ -595,6 +738,8 @@ export default {
               this.resetForm()
               this.loadMyAppointments()
               this.tab = 'list'
+              // Clear payment data after successful registration
+              localStorage.removeItem('lastPaymentData')
             }
           } else {
             this.notify('Payment failed: ' + paymentResponse.data.message + '. Visit was not registered.', 'error')
@@ -643,11 +788,18 @@ export default {
       this.paymentDialog = false
       this.loadMyAppointments()
       this.tab = 'list'
+      // Clear payment data from localStorage after successful payment
+      localStorage.removeItem('lastPaymentData')
     },
 
     handlePaymentFailure() {
       this.notify('Payment failed or was canceled. Please try again.', 'error')
       this.paymentDialog = false
+    },
+
+    clearPaymentData() {
+      localStorage.removeItem('lastPaymentData')
+      this.lastPaymentData = null
     },
 
     dateFormat(date) {
@@ -699,6 +851,9 @@ export default {
       this.currentPaymentId = null
       this.paymentStatus = ''
       this.paymentDialog = false
+      this.isRetryingPayment = false
+      // Don't clear lastPaymentData from localStorage, only from memory
+      this.lastPaymentData = null
 
       // Reset form validation
       if (this.$refs.appointmentForm) {

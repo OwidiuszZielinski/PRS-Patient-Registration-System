@@ -583,4 +583,15 @@ public class PaymentService {
             return null;
         }
     }
+
+    public PaymentEntity getPaymentByVisitId(String visitId) {
+        try {
+            log.info("Getting payment by visitId: {}", visitId);
+            return paymentRepository.findByVisitId(visitId)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.error("Error getting payment by visitId", e);
+            return null;
+        }
+    }
 } 
